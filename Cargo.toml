@@ -6,3 +6,8 @@ edition = "2024"
 [dependencies]
 vulkano = "0.35.1"
 winit = "0.30"
+thiserror = "1.0"
+
+[[example]]
+name = "hello_world"
+path = "examples/hello_world/main.rs"
