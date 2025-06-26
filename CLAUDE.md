@@ -7,12 +7,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 if a prompt starts with `WF `, it means to follow the prompts defined in the matching workflow found in [/workflows](workflows/*)
 
 ### examples
+- `WF quick start` = `follow the prompts defined in /workflows/quick_start.workflow`
 - `WF session start` = `follow the prompts defined in /workflows/session_start.workflow`
-- `WF simple_critical_analysis` = `follow the prompts defined in /workflows/simple_critical_analysis.workflow`
+- `WF review` = `follow the prompts defined in /workflows/review.workflow`
 - `WF quality gate` = `follow the prompts defined in /workflows/quality_gate.workflow`
 - `WF task_planning` = `follow the prompts defined in /workflows/task_planning.workflow`
-
-- `WF quick review` = (custom alias for simple_critical_analysis) `follow the prompts defined in /workflows/simple_critical_analysis.workflow`
 
 ## Project Overview
 
