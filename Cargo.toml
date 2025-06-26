@@ -6,7 +6,7 @@ edition = "2024"
 [dependencies]
 vulkano = "0.35.1"
 winit = "0.30"
-thiserror = "1.0"
+thiserror = "2.0.12"
 
 [[example]]
 name = "hello_world"
