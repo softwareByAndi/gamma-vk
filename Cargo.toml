@@ -8,6 +8,9 @@ vulkano = "0.35.1"
 winit = "0.30"
 thiserror = "2.0.12"
 
+[dev-dependencies]
+tempfile = "3.8"
+
 [[example]]
 name = "hello_world"
 path = "examples/hello_world/main.rs"

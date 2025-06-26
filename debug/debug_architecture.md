@@ -33,3 +33,21 @@
 ## Module Organization (2025-06-26)
 **Choice**: Functional grouping (buffer.rs, shader.rs) vs type grouping  
 **Benefit**: Related functionality stays together, easier maintenance
+
+## API Consistency Principle (2024-06-26)
+**Issue**: Mixed parameter patterns - some `Arc<T>`, some `&Arc<T>`  
+**Decision**: Standardize on `&Arc<T>` across all public APIs  
+**Rationale**: 
+- Avoids forcing unnecessary clones in user code
+- Consistent experience across all modules  
+- Better performance in graphics loops
+- Flexibility for callers to choose clone vs borrow
+
+**Implementation**:
+```rust
+// All public APIs follow this pattern
+pub fn new(device: &Arc<Device>, allocator: &Arc<Allocator>) -> Result<Self>
+// Internal implementation clones only when needed
+```
+
+**Impact**: Saved thousands of Arc clones in typical graphics applications

@@ -168,19 +168,28 @@ mod tests {
 
     #[test]
     fn test_vulkan_context_creation() {
-        // Note: This test might fail in CI environments without Vulkan drivers
-        // but should work in local development environments
+        // Test that VulkanContext can be created and used
         match VulkanContext::new() {
             Ok(context) => {
-                // Verify we can access basic information
-                assert!(
-                    !context.enabled_layers().is_empty() || context.enabled_layers().is_empty()
-                );
-                println!("Vulkan context created successfully in test");
+                // Test that we can access context information
+                let _layers = context.enabled_layers();
+                let _extensions = context.enabled_extensions();
+
+                // If we get here, context creation and basic access work
+                println!("Integration test: VulkanContext created successfully");
             }
             Err(e) => {
-                // In CI or environments without Vulkan, this is expected
-                println!("Vulkan context creation failed (expected in CI): {}", e);
+                match e {
+                    GammaVkError::LibraryLoad(_) => {
+                        panic!("Integration test: Library load failed (expected in CI)");
+                    }
+                    GammaVkError::InstanceCreation(_) => {
+                        panic!("Integration test: Instance creation failed (expected in CI)");
+                    }
+                    _ => {
+                        panic!("Integration test: Unexpected error: {}", e);
+                    }
+                }
             }
         }
     }

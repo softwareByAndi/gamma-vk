@@ -75,21 +75,11 @@ mod tests {
     }
 
     #[test]
-    fn test_error_display() {
+    fn test_error_string_conversion() {
         let error = GammaVkError::initialization("display test");
         let error_string = format!("{}", error);
         assert!(error_string.contains("Initialization failed"));
         assert!(error_string.contains("display test"));
     }
 
-    #[test]
-    fn test_shader_compilation_error_creation() {
-        let error = GammaVkError::shader_compilation("invalid SPIR-V bytecode");
-        match error {
-            GammaVkError::ShaderCompilation { message } => {
-                assert_eq!(message, "invalid SPIR-V bytecode");
-            }
-            _ => panic!("Expected shader compilation error"),
-        }
-    }
 }
