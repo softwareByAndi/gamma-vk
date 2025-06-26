@@ -14,7 +14,6 @@ if a prompt starts with `WF `, it means to follow the prompts defined in the mat
 
 - `WF quick review` = (custom alias for simple_critical_analysis) `follow the prompts defined in /workflows/simple_critical_analysis.workflow`
 
-
 ## Project Overview
 
 Gamma-VK is a safe, performant Vulkan graphics engine built in Rust. The project follows structured iterative development with 2-week iterations, currently transitioning from a working "Hello World" Vulkan application to a proper library architecture with comprehensive testing and documentation.
@@ -22,6 +21,10 @@ Gamma-VK is a safe, performant Vulkan graphics engine built in Rust. The project
 **Current Status**: See [TODO.md](TODO.md) for detailed iteration progress, current tasks, and development roadmap.
 
 ## Development Commands
+
+### Referencing Documentation
+
+always feel free to check appropriate documentation if you are unsure about how to implement a command or feature
 
 ### Building and Running
 ```bash
@@ -156,6 +159,32 @@ The project uses a comprehensive error type hierarchy with `GammaVkError` that p
 Error recovery follows patterns of graceful degradation, automatic cleanup with RAII, and context recovery for device loss scenarios.
 
 ## Development Methodology
+
+### IMPORTANT
+- Don't remove "unused" parameters without understanding architectural purpose
+- Always check debug files when working on related modules
+
+### Debug Notes Usage
+
+When working on specific modules or encountering issues, consult relevant debug files for lessons learned and architectural insights:
+
+#### Auto-Context Rules
+- **Buffer work**: Read `debug/debug_buffer.md` + `debug/debug_vulkano_api.md`
+- **Type errors**: Check `debug/debug_rust_types.md` 
+- **Architecture decisions**: Reference `debug/debug_architecture.md`
+- **Vulkano API confusion**: Start with `debug/debug_vulkano_api.md`
+
+#### Trigger Patterns
+- Seeing "unused parameter" → Load `debug_architecture.md`
+- Type mismatch errors (`u64` vs `usize`) → Load `debug_rust_types.md`
+- Vulkano buffer creation issues → Load `debug_vulkano_api.md` + `debug_buffer.md`
+- Questioning architectural decisions → Load `debug_architecture.md`
+
+#### When to Update Debug Files
+- API gotchas discovered through documentation
+- Architectural decisions that might seem unclear later
+- Type system issues and their resolutions
+- Wrong assumptions corrected during development
 
 ### Iterative Development Approach
 The project follows a structured iterative development methodology with:
@@ -293,6 +322,7 @@ Session insights and architectural decisions are documented in:
 
 - **[TODO.md](TODO.md)** - Current iteration status, tasks, and development roadmap
 - **[workflow_sessions/](workflow_sessions/)** - Development session logs with key insights and decisions
+- **[debug/](debug/)** - Debug notes capturing API gotchas, architectural decisions, and lessons learned
 - **[docs/ITERATIVE_DEVELOPMENT.md](docs/ITERATIVE_DEVELOPMENT.md)** - Comprehensive iterative development methodology
 - **[docs/DESIGN_PRINCIPLES.md](docs/DESIGN_PRINCIPLES.md)** - Core architectural principles and design philosophy
 - **[docs/STYLE_GUIDE.md](docs/STYLE_GUIDE.md)** - Detailed coding standards and conventions

@@ -26,12 +26,23 @@ pub enum GammaVkError {
     /// Generic initialization error
     #[error("Initialization failed: {message}")]
     Initialization { message: String },
+
+    /// Buffer allocation and management errors
+    #[error("Buffer operation failed: {message}")]
+    BufferCreation { message: String },
 }
 
 impl GammaVkError {
     /// Create a new initialization error with a custom message
     pub fn initialization<S: Into<String>>(message: S) -> Self {
         Self::Initialization {
+            message: message.into(),
+        }
+    }
+
+    /// Create a new buffer creation error with a custom message
+    pub fn buffer_creation<S: Into<String>>(message: S) -> Self {
+        Self::BufferCreation {
             message: message.into(),
         }
     }
