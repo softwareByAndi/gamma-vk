@@ -54,12 +54,15 @@ impl Buffer {
                 ..Default::default()
             },
             AllocationCreateInfo {
-                memory_type_filter: MemoryTypeFilter::PREFER_HOST | MemoryTypeFilter::HOST_SEQUENTIAL_WRITE,
+                memory_type_filter: MemoryTypeFilter::PREFER_HOST
+                    | MemoryTypeFilter::HOST_SEQUENTIAL_WRITE,
                 ..Default::default()
             },
             size,
         )
-        .map_err(|e| GammaVkError::buffer_creation(format!("Failed to create host-visible buffer: {}", e)))?;
+        .map_err(|e| {
+            GammaVkError::buffer_creation(format!("Failed to create host-visible buffer: {}", e))
+        })?;
 
         Ok(Buffer { buffer })
     }
@@ -98,7 +101,9 @@ impl Buffer {
             },
             size,
         )
-        .map_err(|e| GammaVkError::buffer_creation(format!("Failed to create device-local buffer: {}", e)))?;
+        .map_err(|e| {
+            GammaVkError::buffer_creation(format!("Failed to create device-local buffer: {}", e))
+        })?;
 
         Ok(Buffer { buffer })
     }
@@ -106,7 +111,7 @@ impl Buffer {
     /// Create a new buffer with custom allocation preferences
     ///
     /// # Arguments
-    /// 
+    ///
     /// * `allocator` - Memory allocator for buffer allocation
     /// * `size` - Size of the buffer in bytes  
     /// * `usage` - Intended usage flags for the buffer
@@ -127,7 +132,9 @@ impl Buffer {
             allocation_info,
             size,
         )
-        .map_err(|e| GammaVkError::buffer_creation(format!("Failed to create custom buffer: {}", e)))?;
+        .map_err(|e| {
+            GammaVkError::buffer_creation(format!("Failed to create custom buffer: {}", e))
+        })?;
 
         Ok(Buffer { buffer })
     }
@@ -167,7 +174,10 @@ impl Buffer {
         }
 
         let mut write_lock = self.buffer.write().map_err(|e| {
-            GammaVkError::buffer_creation(format!("Failed to lock buffer for writing (buffer may not be host-visible): {}", e))
+            GammaVkError::buffer_creation(format!(
+                "Failed to lock buffer for writing (buffer may not be host-visible): {}",
+                e
+            ))
         })?;
 
         write_lock[..data.len()].copy_from_slice(data);
@@ -208,7 +218,9 @@ impl Buffer {
         // 3. Record copy command from staging to device-local buffer
         // 4. Submit command buffer and wait for completion
         // 5. Clean up staging buffer
-        Err(GammaVkError::buffer_creation("Staging buffer upload not yet implemented".to_string()))
+        Err(GammaVkError::buffer_creation(
+            "Staging buffer upload not yet implemented".to_string(),
+        ))
     }
 
     /// Get buffer usage flags
@@ -254,7 +266,12 @@ impl VertexBuffer {
         allocator: Arc<StandardMemoryAllocator>,
         size: u64,
     ) -> Result<Self> {
-        let buffer = Buffer::new_device_local(device, allocator, size, BufferUsage::VERTEX_BUFFER | BufferUsage::TRANSFER_DST)?;
+        let buffer = Buffer::new_device_local(
+            device,
+            allocator,
+            size,
+            BufferUsage::VERTEX_BUFFER | BufferUsage::TRANSFER_DST,
+        )?;
         Ok(VertexBuffer { buffer })
     }
 
@@ -294,7 +311,12 @@ impl IndexBuffer {
         allocator: Arc<StandardMemoryAllocator>,
         size: u64,
     ) -> Result<Self> {
-        let buffer = Buffer::new_device_local(device, allocator, size, BufferUsage::INDEX_BUFFER | BufferUsage::TRANSFER_DST)?;
+        let buffer = Buffer::new_device_local(
+            device,
+            allocator,
+            size,
+            BufferUsage::INDEX_BUFFER | BufferUsage::TRANSFER_DST,
+        )?;
         Ok(IndexBuffer { buffer })
     }
 
@@ -324,7 +346,8 @@ impl UniformBuffer {
         allocator: Arc<StandardMemoryAllocator>,
         size: u64,
     ) -> Result<Self> {
-        let buffer = Buffer::new_host_visible(device, allocator, size, BufferUsage::UNIFORM_BUFFER)?;
+        let buffer =
+            Buffer::new_host_visible(device, allocator, size, BufferUsage::UNIFORM_BUFFER)?;
         Ok(UniformBuffer { buffer })
     }
 
@@ -334,7 +357,12 @@ impl UniformBuffer {
         allocator: Arc<StandardMemoryAllocator>,
         size: u64,
     ) -> Result<Self> {
-        let buffer = Buffer::new_device_local(device, allocator, size, BufferUsage::UNIFORM_BUFFER | BufferUsage::TRANSFER_DST)?;
+        let buffer = Buffer::new_device_local(
+            device,
+            allocator,
+            size,
+            BufferUsage::UNIFORM_BUFFER | BufferUsage::TRANSFER_DST,
+        )?;
         Ok(UniformBuffer { buffer })
     }
 
@@ -361,7 +389,7 @@ mod tests {
         // This test helper creates a device for testing
         // It may fail in CI environments without Vulkan drivers
         let library = vulkano::VulkanLibrary::new().ok()?;
-        
+
         // Try with portability enumeration for MoltenVK first, then fallback
         let instance = match vulkano::instance::Instance::new(
             library.clone(),
@@ -380,7 +408,8 @@ mod tests {
                 vulkano::instance::Instance::new(
                     library,
                     vulkano::instance::InstanceCreateInfo::default(),
-                ).ok()?
+                )
+                .ok()?
             }
         };
 
@@ -414,9 +443,17 @@ mod tests {
     #[test]
     fn test_host_visible_buffer_creation() {
         if let Some((device, allocator)) = create_test_device() {
-            let buffer = Buffer::new_host_visible(device, allocator.clone(), 1024, BufferUsage::VERTEX_BUFFER);
+            let buffer = Buffer::new_host_visible(
+                device,
+                allocator.clone(),
+                1024,
+                BufferUsage::VERTEX_BUFFER,
+            );
 
-            assert!(buffer.is_ok(), "Should be able to create host-visible buffer");
+            assert!(
+                buffer.is_ok(),
+                "Should be able to create host-visible buffer"
+            );
             let buffer = buffer.unwrap();
             assert_eq!(buffer.size(), 1024);
             assert!(buffer.usage().intersects(BufferUsage::VERTEX_BUFFER));
@@ -428,9 +465,17 @@ mod tests {
     #[test]
     fn test_device_local_buffer_creation() {
         if let Some((device, allocator)) = create_test_device() {
-            let buffer = Buffer::new_device_local(device, allocator.clone(), 1024, BufferUsage::VERTEX_BUFFER | BufferUsage::TRANSFER_DST);
+            let buffer = Buffer::new_device_local(
+                device,
+                allocator.clone(),
+                1024,
+                BufferUsage::VERTEX_BUFFER | BufferUsage::TRANSFER_DST,
+            );
 
-            assert!(buffer.is_ok(), "Should be able to create device-local buffer");
+            assert!(
+                buffer.is_ok(),
+                "Should be able to create device-local buffer"
+            );
             let buffer = buffer.unwrap();
             assert_eq!(buffer.size(), 1024);
             assert!(buffer.usage().intersects(BufferUsage::VERTEX_BUFFER));
@@ -443,34 +488,53 @@ mod tests {
     #[test]
     fn test_host_visible_buffer_can_be_written() {
         if let Some((device, allocator)) = create_test_device() {
-            let buffer = Buffer::new_host_visible(device, allocator.clone(), 1024, BufferUsage::VERTEX_BUFFER);
-            
+            let buffer = Buffer::new_host_visible(
+                device,
+                allocator.clone(),
+                1024,
+                BufferUsage::VERTEX_BUFFER,
+            );
+
             if let Ok(buffer) = buffer {
                 // Test the core requirement: Can I write vertex data to a vertex buffer?
                 let vertex_data = vec![1u8, 2, 3, 4, 5]; // Simulated vertex data
                 let result = buffer.write_data(&vertex_data);
-                assert!(result.is_ok(), "Should be able to write vertex data to host-visible buffer");
-                
+                assert!(
+                    result.is_ok(),
+                    "Should be able to write vertex data to host-visible buffer"
+                );
+
                 // Test that large data writes work
                 let large_vertex_data = vec![42u8; 1024];
                 let result = buffer.write_data(&large_vertex_data);
-                assert!(result.is_ok(), "Should be able to write large vertex data to buffer");
+                assert!(
+                    result.is_ok(),
+                    "Should be able to write large vertex data to buffer"
+                );
             }
         } else {
             println!("Skipping buffer write test - no Vulkan device available");
         }
     }
-    
-    #[test] 
+
+    #[test]
     fn test_device_local_buffer_cannot_be_written_directly() {
         if let Some((device, allocator)) = create_test_device() {
-            let buffer = Buffer::new_device_local(device, allocator.clone(), 1024, BufferUsage::VERTEX_BUFFER | BufferUsage::TRANSFER_DST);
-            
+            let buffer = Buffer::new_device_local(
+                device,
+                allocator.clone(),
+                1024,
+                BufferUsage::VERTEX_BUFFER | BufferUsage::TRANSFER_DST,
+            );
+
             if let Ok(buffer) = buffer {
                 // Device-local buffers should not be directly writable from CPU
                 let vertex_data = vec![1u8, 2, 3, 4, 5];
                 let result = buffer.write_data(&vertex_data);
-                assert!(result.is_err(), "Device-local buffer should not be directly writable from CPU");
+                assert!(
+                    result.is_err(),
+                    "Device-local buffer should not be directly writable from CPU"
+                );
             }
         } else {
             println!("Skipping device-local buffer write test - no Vulkan device available");
@@ -480,21 +544,31 @@ mod tests {
     #[test]
     fn test_buffer_write_data_bounds_checking() {
         if let Some((device, allocator)) = create_test_device() {
-            let buffer = Buffer::new_host_visible(device, allocator.clone(), 100, BufferUsage::VERTEX_BUFFER);
-            
+            let buffer = Buffer::new_host_visible(
+                device,
+                allocator.clone(),
+                100,
+                BufferUsage::VERTEX_BUFFER,
+            );
+
             if let Ok(buffer) = buffer {
                 // Test core safety requirement: Buffer should reject oversized data
                 let oversized_data = vec![1u8; 200]; // Larger than buffer
                 let result = buffer.write_data(&oversized_data);
-                assert!(result.is_err(), "Buffer should reject data larger than its capacity");
-                
+                assert!(
+                    result.is_err(),
+                    "Buffer should reject data larger than its capacity"
+                );
+
                 // Verify error message is helpful
                 if let Err(error) = result {
                     let error_msg = format!("{}", error);
-                    assert!(error_msg.contains("exceeds buffer size"), 
-                           "Error should explain the size constraint violation");
+                    assert!(
+                        error_msg.contains("exceeds buffer size"),
+                        "Error should explain the size constraint violation"
+                    );
                 }
-                
+
                 // Test that correctly sized data still works
                 let correct_data = vec![1u8; 50]; // Smaller than buffer
                 let result = buffer.write_data(&correct_data);
@@ -508,15 +582,22 @@ mod tests {
     #[test]
     fn test_vertex_buffer_creation() {
         if let Some((device, allocator)) = create_test_device() {
-            let vertex_buffer = VertexBuffer::new_host_visible(device.clone(), allocator.clone(), 2048);
+            let vertex_buffer =
+                VertexBuffer::new_host_visible(device.clone(), allocator.clone(), 2048);
 
-            assert!(vertex_buffer.is_ok(), "Should be able to create host-visible vertex buffer");
+            assert!(
+                vertex_buffer.is_ok(),
+                "Should be able to create host-visible vertex buffer"
+            );
             let vertex_buffer = vertex_buffer.unwrap();
             assert_eq!(vertex_buffer.size(), 2048);
-            
+
             // Test device-local variant
             let device_vertex_buffer = VertexBuffer::new_device_local(device, allocator, 2048);
-            assert!(device_vertex_buffer.is_ok(), "Should be able to create device-local vertex buffer");
+            assert!(
+                device_vertex_buffer.is_ok(),
+                "Should be able to create device-local vertex buffer"
+            );
         } else {
             println!("Skipping vertex buffer creation test - no Vulkan device available");
         }
@@ -525,15 +606,22 @@ mod tests {
     #[test]
     fn test_index_buffer_creation() {
         if let Some((device, allocator)) = create_test_device() {
-            let index_buffer = IndexBuffer::new_host_visible(device.clone(), allocator.clone(), 512);
+            let index_buffer =
+                IndexBuffer::new_host_visible(device.clone(), allocator.clone(), 512);
 
-            assert!(index_buffer.is_ok(), "Should be able to create host-visible index buffer");
+            assert!(
+                index_buffer.is_ok(),
+                "Should be able to create host-visible index buffer"
+            );
             let index_buffer = index_buffer.unwrap();
             assert_eq!(index_buffer.size(), 512);
-            
+
             // Test device-local variant
             let device_index_buffer = IndexBuffer::new_device_local(device, allocator, 512);
-            assert!(device_index_buffer.is_ok(), "Should be able to create device-local index buffer");
+            assert!(
+                device_index_buffer.is_ok(),
+                "Should be able to create device-local index buffer"
+            );
         } else {
             println!("Skipping index buffer creation test - no Vulkan device available");
         }
@@ -542,41 +630,64 @@ mod tests {
     #[test]
     fn test_uniform_buffer_creation() {
         if let Some((device, allocator)) = create_test_device() {
-            let uniform_buffer = UniformBuffer::new_host_visible(device.clone(), allocator.clone(), 256);
+            let uniform_buffer =
+                UniformBuffer::new_host_visible(device.clone(), allocator.clone(), 256);
 
-            assert!(uniform_buffer.is_ok(), "Should be able to create host-visible uniform buffer");
+            assert!(
+                uniform_buffer.is_ok(),
+                "Should be able to create host-visible uniform buffer"
+            );
             let uniform_buffer = uniform_buffer.unwrap();
             assert_eq!(uniform_buffer.size(), 256);
-            
+
             // Test device-local variant
             let device_uniform_buffer = UniformBuffer::new_device_local(device, allocator, 256);
-            assert!(device_uniform_buffer.is_ok(), "Should be able to create device-local uniform buffer");
+            assert!(
+                device_uniform_buffer.is_ok(),
+                "Should be able to create device-local uniform buffer"
+            );
         } else {
             println!("Skipping uniform buffer creation test - no Vulkan device available");
         }
     }
 
-    #[test] 
+    #[test]
     fn test_buffer_types_have_correct_usage_semantics() {
         if let Some((device, allocator)) = create_test_device() {
             // Test core requirement: Different buffer types should be semantically distinct
-            let vertex_buffer = VertexBuffer::new_host_visible(device.clone(), allocator.clone(), 1024);
-            let index_buffer = IndexBuffer::new_host_visible(device.clone(), allocator.clone(), 512);
+            let vertex_buffer =
+                VertexBuffer::new_host_visible(device.clone(), allocator.clone(), 1024);
+            let index_buffer =
+                IndexBuffer::new_host_visible(device.clone(), allocator.clone(), 512);
             let uniform_buffer = UniformBuffer::new_host_visible(device, allocator, 256);
-            
+
             if let (Ok(vb), Ok(ib), Ok(ub)) = (vertex_buffer, index_buffer, uniform_buffer) {
                 // Verify each buffer type enforces its intended usage
-                assert!(vb.buffer().usage().intersects(BufferUsage::VERTEX_BUFFER),
-                       "VertexBuffer should be usable for vertex data");
-                assert!(ib.buffer().usage().intersects(BufferUsage::INDEX_BUFFER),
-                       "IndexBuffer should be usable for index data");
-                assert!(ub.buffer().usage().intersects(BufferUsage::UNIFORM_BUFFER),
-                       "UniformBuffer should be usable for uniform data");
-                
+                assert!(
+                    vb.buffer().usage().intersects(BufferUsage::VERTEX_BUFFER),
+                    "VertexBuffer should be usable for vertex data"
+                );
+                assert!(
+                    ib.buffer().usage().intersects(BufferUsage::INDEX_BUFFER),
+                    "IndexBuffer should be usable for index data"
+                );
+                assert!(
+                    ub.buffer().usage().intersects(BufferUsage::UNIFORM_BUFFER),
+                    "UniformBuffer should be usable for uniform data"
+                );
+
                 // Verify that type wrappers preserve size semantics
-                assert_eq!(vb.size(), 1024, "VertexBuffer should preserve requested size");
+                assert_eq!(
+                    vb.size(),
+                    1024,
+                    "VertexBuffer should preserve requested size"
+                );
                 assert_eq!(ib.size(), 512, "IndexBuffer should preserve requested size");
-                assert_eq!(ub.size(), 256, "UniformBuffer should preserve requested size");
+                assert_eq!(
+                    ub.size(),
+                    256,
+                    "UniformBuffer should preserve requested size"
+                );
             }
         } else {
             println!("Skipping buffer type semantics test - no Vulkan device available");
@@ -588,17 +699,31 @@ mod tests {
         if let Some((device, allocator)) = create_test_device() {
             // Test core RAII requirement: Resources should clean up automatically
             let allocator_weak = Arc::downgrade(&allocator);
-            
+
             {
-                let _buffer1 = Buffer::new_host_visible(device.clone(), allocator.clone(), 1024, BufferUsage::VERTEX_BUFFER);
-                let _buffer2 = Buffer::new_device_local(device.clone(), allocator.clone(), 2048, BufferUsage::INDEX_BUFFER | BufferUsage::TRANSFER_DST);
+                let _buffer1 = Buffer::new_host_visible(
+                    device.clone(),
+                    allocator.clone(),
+                    1024,
+                    BufferUsage::VERTEX_BUFFER,
+                );
+                let _buffer2 = Buffer::new_device_local(
+                    device.clone(),
+                    allocator.clone(),
+                    2048,
+                    BufferUsage::INDEX_BUFFER | BufferUsage::TRANSFER_DST,
+                );
                 // Key requirement: Buffers should be automatically cleaned up when they go out of scope
                 // This prevents memory leaks in graphics applications
             }
-            
+
             // Test that allocator remains functional after buffer cleanup
-            let _buffer3 = Buffer::new_host_visible(device, allocator, 512, BufferUsage::UNIFORM_BUFFER);
-            assert!(allocator_weak.upgrade().is_some(), "Allocator should remain functional after buffer cleanup");
+            let _buffer3 =
+                Buffer::new_host_visible(device, allocator, 512, BufferUsage::UNIFORM_BUFFER);
+            assert!(
+                allocator_weak.upgrade().is_some(),
+                "Allocator should remain functional after buffer cleanup"
+            );
         } else {
             println!("Skipping RAII cleanup test - no Vulkan device available");
         }
