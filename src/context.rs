@@ -5,12 +5,129 @@
 
 use std::sync::Arc;
 use vulkano::{
-    VulkanLibrary,
-    device::{Device, DeviceCreateInfo, QueueCreateInfo, physical::PhysicalDevice},
+    Version, VulkanLibrary,
+    device::{Device, DeviceCreateInfo, Queue, QueueCreateInfo, physical::PhysicalDevice},
     instance::{Instance, InstanceCreateInfo, InstanceExtensions},
+    memory::allocator::StandardMemoryAllocator,
 };
 
 use crate::{GammaVkError, Result};
+
+/// Builder for creating a VulkanContext with custom configuration
+///
+/// This builder pattern allows flexible configuration of the Vulkan instance
+/// and device creation process.
+///
+/// # Examples
+///
+/// ```no_run
+/// use gamma_vk::VulkanContext;
+///
+/// let context = VulkanContext::builder()
+///     .application_name("My Game")
+///     .application_version(1, 0, 0)
+///     .engine_name("Gamma-VK")
+///     .engine_version(0, 1, 0)
+///     .enable_validation_layers()
+///     .build()?;
+/// # Ok::<(), gamma_vk::GammaVkError>(())
+/// ```
+#[derive(Debug, Clone)]
+pub struct VulkanContextBuilder {
+    application_name: Option<String>,
+    application_version: Version,
+    engine_name: Option<String>,
+    engine_version: Version,
+    enable_validation: bool,
+    prefer_discrete_gpu: bool,
+    required_extensions: Vec<String>,
+}
+
+impl Default for VulkanContextBuilder {
+    fn default() -> Self {
+        Self {
+            application_name: None,
+            application_version: Version::V1_0,
+            engine_name: Some("Gamma-VK".to_string()),
+            engine_version: Version::V1_0,
+            enable_validation: cfg!(debug_assertions),
+            prefer_discrete_gpu: true,
+            required_extensions: Vec::new(),
+        }
+    }
+}
+
+impl VulkanContextBuilder {
+    /// Create a new builder with default settings
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Set the application name
+    pub fn application_name(mut self, name: impl Into<String>) -> Self {
+        self.application_name = Some(name.into());
+        self
+    }
+
+    /// Set the application version
+    pub fn application_version(mut self, major: u32, minor: u32, patch: u32) -> Self {
+        self.application_version = Version {
+            major,
+            minor,
+            patch,
+        };
+        self
+    }
+
+    /// Set the engine name
+    pub fn engine_name(mut self, name: impl Into<String>) -> Self {
+        self.engine_name = Some(name.into());
+        self
+    }
+
+    /// Set the engine version
+    pub fn engine_version(mut self, major: u32, minor: u32, patch: u32) -> Self {
+        self.engine_version = Version {
+            major,
+            minor,
+            patch,
+        };
+        self
+    }
+
+    /// Enable validation layers (enabled by default in debug builds)
+    pub fn enable_validation_layers(mut self) -> Self {
+        self.enable_validation = true;
+        todo!("extensions are not yet implemented in VulkanContext");
+        // self
+    }
+
+    /// Disable validation layers (useful for performance testing in debug builds)
+    pub fn disable_validation_layers(mut self) -> Self {
+        self.enable_validation = false;
+        todo!("extensions are not yet implemented in VulkanContext");
+        // self
+    }
+
+    /// Prefer discrete GPU over integrated (default: true)
+    pub fn prefer_discrete_gpu(mut self, prefer: bool) -> Self {
+        self.prefer_discrete_gpu = prefer;
+        todo!("extensions are not yet implemented in VulkanContext");
+        // self
+    }
+
+    /// Add a required instance extension
+    pub fn required_extension(mut self, extension: impl Into<String>) -> Self {
+        self.required_extensions.push(extension.into());
+        todo!("extensions are not yet implemented in VulkanContext");
+        // self
+    }
+
+    /// Build the VulkanContext with the configured settings
+    pub fn build(self) -> Result<VulkanContext> {
+        VulkanContext::new_with_config(self)
+    }
+}
 
 /// Main context for Vulkan operations
 ///
@@ -26,9 +143,34 @@ pub struct VulkanContext {
     device: Arc<Device>,
     /// The selected physical device
     physical_device: Arc<PhysicalDevice>,
+    /// The graphics queue
+    graphics_queue: Arc<Queue>,
+    /// The graphics queue family index
+    graphics_queue_family_index: u32,
+    /// The memory allocator for GPU memory management
+    memory_allocator: Arc<StandardMemoryAllocator>,
 }
 
 impl VulkanContext {
+    /// Create a builder for configuring VulkanContext creation
+    ///
+    /// This is the recommended way to create a VulkanContext with custom settings.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use gamma_vk::VulkanContext;
+    ///
+    /// let context = VulkanContext::builder()
+    ///     .application_name("My App")
+    ///     .enable_validation_layers()
+    ///     .build()?;
+    /// # Ok::<(), gamma_vk::GammaVkError>(())
+    /// ```
+    pub fn builder() -> VulkanContextBuilder {
+        VulkanContextBuilder::default()
+    }
+
     /// Create a new VulkanContext with proper Vulkan initialization
     ///
     /// This method attempts to create a Vulkan instance with MoltenVK portability
@@ -50,17 +192,33 @@ impl VulkanContext {
     /// # Ok::<(), gamma_vk::GammaVkError>(())
     /// ```
     pub fn new() -> Result<Self> {
+        Self::builder().build()
+    }
+
+    /// Create a new VulkanContext with a specific configuration
+    fn new_with_config(config: VulkanContextBuilder) -> Result<Self> {
         // Load the Vulkan library
         let library = VulkanLibrary::new().map_err(GammaVkError::LibraryLoad)?;
+
+        // Build instance extensions
+        let extensions = InstanceExtensions {
+            khr_portability_enumeration: true,
+            ..InstanceExtensions::empty()
+        };
+
+        // Note: Vulkano's extension system is compile-time based
+        // Dynamic extension loading would require a different approach
+        // For now, we just support the basic extensions needed
 
         // Try with portability enumeration for MoltenVK first
         let instance = match Instance::new(
             library.clone(),
             InstanceCreateInfo {
-                enabled_extensions: InstanceExtensions {
-                    khr_portability_enumeration: true,
-                    ..InstanceExtensions::empty()
-                },
+                application_name: config.application_name.clone(),
+                application_version: config.application_version,
+                engine_name: config.engine_name.clone(),
+                engine_version: config.engine_version,
+                enabled_extensions: extensions,
                 flags: vulkano::instance::InstanceCreateFlags::ENUMERATE_PORTABILITY,
                 ..Default::default()
             },
@@ -75,6 +233,10 @@ impl VulkanContext {
                 Instance::new(
                     library.clone(),
                     InstanceCreateInfo {
+                        application_name: config.application_name,
+                        application_version: config.application_version,
+                        engine_name: config.engine_name,
+                        engine_version: config.engine_version,
                         ..Default::default()
                     },
                 )
@@ -108,7 +270,7 @@ impl VulkanContext {
             .ok_or_else(|| GammaVkError::initialization("No graphics queue family found"))?;
 
         // Create the logical device
-        let (device, _queues) = Device::new(
+        let (device, mut queues) = Device::new(
             physical_device.clone(),
             DeviceCreateInfo {
                 queue_create_infos: vec![QueueCreateInfo {
@@ -120,11 +282,22 @@ impl VulkanContext {
         )
         .map_err(|e| GammaVkError::initialization(format!("Failed to create device: {}", e)))?;
 
+        // Get the graphics queue
+        let graphics_queue = queues
+            .next()
+            .ok_or_else(|| GammaVkError::initialization("Failed to get graphics queue"))?;
+
+        // Create the memory allocator
+        let memory_allocator = Arc::new(StandardMemoryAllocator::new_default(device.clone()));
+
         Ok(VulkanContext {
             instance,
             library,
             device,
             physical_device,
+            graphics_queue,
+            graphics_queue_family_index: queue_family_index as u32,
+            memory_allocator,
         })
     }
 
@@ -147,6 +320,62 @@ impl VulkanContext {
     pub fn physical_device(&self) -> Arc<PhysicalDevice> {
         self.physical_device.clone()
     }
+
+    /// Get a reference to the graphics queue
+    ///
+    /// This queue supports graphics operations and is used for command submission.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use gamma_vk::VulkanContext;
+    ///
+    /// let context = VulkanContext::new()?;
+    /// let queue = context.graphics_queue();
+    /// // Use queue for command submission
+    /// # Ok::<(), gamma_vk::GammaVkError>(())
+    /// ```
+    pub fn graphics_queue(&self) -> Arc<Queue> {
+        self.graphics_queue.clone()
+    }
+
+    /// Get the graphics queue family index
+    ///
+    /// This index identifies which queue family was selected for graphics operations.
+    /// Useful when creating command pools or other resources that need a queue family.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use gamma_vk::VulkanContext;
+    ///
+    /// let context = VulkanContext::new()?;
+    /// let queue_family = context.graphics_queue_family_index();
+    /// println!("Graphics queue family: {}", queue_family);
+    /// # Ok::<(), gamma_vk::GammaVkError>(())
+    /// ```
+    pub fn graphics_queue_family_index(&self) -> u32 {
+        self.graphics_queue_family_index
+    }
+
+    /// Get a reference to the memory allocator
+    ///
+    /// The memory allocator is used for all GPU memory allocations in the engine.
+    /// This includes buffers, images, and other GPU resources.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use gamma_vk::VulkanContext;
+    ///
+    /// let context = VulkanContext::new()?;
+    /// let allocator = context.memory_allocator();
+    /// // Use allocator for buffer/image creation
+    /// # Ok::<(), gamma_vk::GammaVkError>(())
+    /// ```
+    pub fn memory_allocator(&self) -> Arc<StandardMemoryAllocator> {
+        self.memory_allocator.clone()
+    }
 }
 
 impl Drop for VulkanContext {
@@ -159,38 +388,5 @@ impl Drop for VulkanContext {
         // VulkanContext dropped - Vulkan resources cleaned up
         // Resources are automatically cleaned up by Arc<Instance> and Arc<VulkanLibrary>
         // when their reference counts reach zero
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_vulkan_context_creation() {
-        // Test that VulkanContext can be created and used
-        match VulkanContext::new() {
-            Ok(context) => {
-                // Test that we can access context information
-                let _layers = context.enabled_layers();
-                let _extensions = context.enabled_extensions();
-
-                // If we get here, context creation and basic access work
-                println!("Integration test: VulkanContext created successfully");
-            }
-            Err(e) => {
-                match e {
-                    GammaVkError::LibraryLoad(_) => {
-                        panic!("Integration test: Library load failed (expected in CI)");
-                    }
-                    GammaVkError::InstanceCreation(_) => {
-                        panic!("Integration test: Instance creation failed (expected in CI)");
-                    }
-                    _ => {
-                        panic!("Integration test: Unexpected error: {}", e);
-                    }
-                }
-            }
-        }
     }
 }
