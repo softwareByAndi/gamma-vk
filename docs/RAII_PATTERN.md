@@ -611,4 +611,168 @@ fn render_scene(command_buffer: &mut CommandBuffer, scene: &Scene) -> Result<(),
 } // Render pass automatically ended here
 ```
 
+## Vulkano-Specific RAII Patterns
+
+### Subbuffer RAII Pattern
+
+Vulkano provides `Subbuffer<[T]>` which automatically handles RAII for buffer resources:
+
+```rust
+use vulkano::{
+    buffer::{Buffer as VulkanoBuffer, BufferCreateInfo, BufferUsage, Subbuffer},
+    memory::allocator::{AllocationCreateInfo, MemoryTypeFilter},
+};
+
+pub struct Buffer {
+    // Subbuffer automatically handles cleanup
+    buffer: Subbuffer<[u8]>,
+}
+
+impl Buffer {
+    pub fn new_host_visible(
+        allocator: Arc<StandardMemoryAllocator>,
+        size: u64,
+        usage: BufferUsage,
+    ) -> Result<Self> {
+        let buffer = VulkanoBuffer::new_slice::<u8>(
+            allocator,
+            BufferCreateInfo { usage, ..Default::default() },
+            AllocationCreateInfo {
+                // Critical: Specify memory type for host-visible access
+                memory_type_filter: MemoryTypeFilter::PREFER_HOST | MemoryTypeFilter::HOST_SEQUENTIAL_WRITE,
+                ..Default::default()
+            },
+            size,
+        )?;
+
+        Ok(Buffer { buffer })
+    }
+}
+
+// No explicit Drop implementation needed!
+// Subbuffer<[u8]> handles all cleanup automatically
+```
+
+### Memory Type Stratification
+
+Vulkano requires explicit memory allocation strategies. RAII works differently for different memory types:
+
+```rust
+impl Buffer {
+    // Host-visible: CPU can write directly
+    pub fn new_host_visible(/* ... */) -> Result<Self> {
+        let buffer = VulkanoBuffer::new_slice::<u8>(
+            allocator,
+            create_info,
+            AllocationCreateInfo {
+                memory_type_filter: MemoryTypeFilter::PREFER_HOST | MemoryTypeFilter::HOST_SEQUENTIAL_WRITE,
+                ..Default::default()
+            },
+            size,
+        )?;
+        Ok(Buffer { buffer })
+    }
+
+    // Device-local: GPU optimal, requires staging for CPU writes
+    pub fn new_device_local(/* ... */) -> Result<Self> {
+        let buffer = VulkanoBuffer::new_slice::<u8>(
+            allocator,
+            create_info,
+            AllocationCreateInfo {
+                memory_type_filter: MemoryTypeFilter::PREFER_DEVICE,
+                ..Default::default()
+            },
+            size,
+        )?;
+        Ok(Buffer { buffer })
+    }
+}
+```
+
+### Type-Safe Buffer Wrappers
+
+RAII combined with type safety prevents misuse:
+
+```rust
+pub struct VertexBuffer {
+    buffer: Buffer,  // Wraps RAII buffer
+}
+
+impl VertexBuffer {
+    pub fn new_host_visible(
+        device: Arc<Device>,
+        allocator: Arc<StandardMemoryAllocator>,
+        size: u64,
+    ) -> Result<Self> {
+        // Usage flags enforced at construction
+        let buffer = Buffer::new_host_visible(device, allocator, size, BufferUsage::VERTEX_BUFFER)?;
+        Ok(VertexBuffer { buffer })
+    }
+}
+
+// Usage:
+fn render_mesh() -> Result<()> {
+    let vertex_buffer = VertexBuffer::new_host_visible(device, allocator, 1024)?;
+    let vertex_data = vec![1.0f32, 2.0, 3.0];
+    
+    // Type system prevents using vertex buffer as index buffer
+    vertex_buffer.buffer().write_data(&vertex_data.as_bytes())?;
+    
+    // Buffer automatically cleaned up when it goes out of scope
+    Ok(())
+} // <- VertexBuffer dropped here, Subbuffer cleanup triggered
+```
+
+### Vulkano Error Handling with RAII
+
+Vulkano errors integrate seamlessly with RAII patterns:
+
+```rust
+fn create_rendering_resources() -> Result<(), GammaVkError> {
+    let vertex_buffer = Buffer::new_host_visible(device.clone(), allocator.clone(), 1024, BufferUsage::VERTEX_BUFFER)?;
+    let index_buffer = Buffer::new_host_visible(device.clone(), allocator.clone(), 512, BufferUsage::INDEX_BUFFER)?;
+    let uniform_buffer = Buffer::new_host_visible(device, allocator, 256, BufferUsage::UNIFORM_BUFFER)?;
+    
+    // Upload data to buffers
+    vertex_buffer.write_data(&vertex_data)?;
+    index_buffer.write_data(&index_data)?;
+    uniform_buffer.write_data(&uniform_data)?;
+    
+    // If any operation fails, ALL buffers are automatically cleaned up
+    // No manual cleanup needed even in error scenarios
+    
+    Ok(())
+}
+```
+
+### Memory Allocation RAII
+
+Vulkano's allocator pattern ensures proper memory management:
+
+```rust
+// Allocator is shared and automatically manages memory lifecycle
+let allocator = Arc::new(StandardMemoryAllocator::new_default(device.clone()));
+
+{
+    // Multiple buffers can share the same allocator
+    let buffer1 = Buffer::new_host_visible(device.clone(), allocator.clone(), 1024, BufferUsage::VERTEX_BUFFER)?;
+    let buffer2 = Buffer::new_device_local(device.clone(), allocator.clone(), 2048, BufferUsage::INDEX_BUFFER | BufferUsage::TRANSFER_DST)?;
+    
+    // Buffers automatically cleaned up here
+}
+
+// Allocator remains valid for future use
+let buffer3 = Buffer::new_host_visible(device, allocator, 512, BufferUsage::UNIFORM_BUFFER)?;
+```
+
+### Key Vulkano RAII Insights
+
+1. **`Subbuffer<[T]>` provides automatic cleanup** - No manual Drop implementation needed
+2. **Memory type filters are critical** - `AllocationCreateInfo::default()` often fails
+3. **Type wrappers enhance safety** - Prevent buffer misuse at compile time
+4. **Error handling works seamlessly** - Failed allocations don't leak resources
+5. **Allocator sharing is safe** - Reference counting handles lifecycle automatically
+
+These patterns ensure that Vulkano resources are managed safely and efficiently, following Rust's ownership model while leveraging Vulkano's automatic resource management capabilities.
+
 RAII is fundamental to safe, efficient graphics programming in Rust. By tying resource lifetimes to object lifetimes, we eliminate entire classes of bugs while making code cleaner and more maintainable. In the context of Vulkan, where resource management is complex and critical, RAII transforms error-prone manual cleanup into automatic, guaranteed correctness.

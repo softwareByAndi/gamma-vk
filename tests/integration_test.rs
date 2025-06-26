@@ -85,7 +85,7 @@ fn test_buffer_integration() {
                                 Arc::new(StandardMemoryAllocator::new_default(device.clone()));
 
                             // Test vertex buffer creation
-                            match VertexBuffer::new(device, allocator, 1024) {
+                            match VertexBuffer::new_host_visible(device, allocator, 1024) {
                                 Ok(buffer) => {
                                     assert_eq!(buffer.size(), 1024);
                                     println!("Integration test: Buffer creation successful");
