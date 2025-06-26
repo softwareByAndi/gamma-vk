@@ -207,7 +207,7 @@ The project is organized into planned iterations:
 4. Run quality checks before committing (`cargo test`, `cargo clippy`, `cargo fmt`)
 5. Update documentation for new features
 6. Follow iterative development principles from [docs/ITERATIVE_DEVELOPMENT.md](docs/ITERATIVE_DEVELOPMENT.md)
-7. **Session End**: Document insights and decisions in workflow_sessions/{i}_{task_name}.log
+7. **Session End**: Document insights and decisions in workflow_sessions/{i}_{task_name}.log.md
 
 ### Quality Standards
 - All public APIs must have rustdoc documentation
@@ -294,7 +294,7 @@ The project includes a structured workflow system to ensure consistent, high-qua
 
 ### Session Logging
 Session insights and architectural decisions are documented in:
-- **workflow_sessions/{i}_{task_name}.log** - Numbered session logs capturing key decisions, analysis, and next steps
+- **workflow_sessions/{i}_{task_name}.log.md** - Numbered session logs capturing key decisions, analysis, and next steps
 
 ### Usage Examples
 ```bash

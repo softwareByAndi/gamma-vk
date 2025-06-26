@@ -99,7 +99,7 @@
 ### CLAUDE.md Update Status
 - **Status**: ✅ COMPLETED
 - **Finding**: CLAUDE.md already contains comprehensive AI Workflow Management System documentation
-- **Session Log Format**: Correctly updated to `{i}_{task_name}.log` format (line 169, 256)
+- **Session Log Format**: Correctly updated to `{i}_{task_name}.log.md` format (line 169, 256)
 - **Workflow Files**: All four workflow templates properly documented and referenced
 
 ### Session Startup Health Assessment

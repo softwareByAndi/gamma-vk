@@ -173,7 +173,7 @@ Iteration End:
 ## Session Logging Best Practices
 
 ### Log Naming Convention
-Use format: `{i}_{task_name}.log` where:
+Use format: `{i}_{task_name}.log.md` where:
 - `i` = Sequential number (higher = more recent)
 - `task_name` = Descriptive task identifier
 

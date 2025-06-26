@@ -26,7 +26,7 @@ Perform comprehensive session initialization with staff engineer-level analysis 
 - [ ] **Prioritize Work** - Confirm next task from TODO.md or identify urgent work needed
 - [ ] **Scope Validation** - Ensure selected work fits within session time constraints
 - [ ] **Resource Check** - Verify all necessary tools/dependencies are available
-- [ ] **Create Session Log** - Document findings and decisions in workflow_sessions/{i}_{task_name}.log
+- [ ] **Create Session Log** - Document findings and decisions in workflow_sessions/{i}_{task_name}.log.md
 
 ### 5. Decision Points
 - [ ] **Schedule Adjustment Needed?** - Determine if TODO.md requires updates based on analysis
