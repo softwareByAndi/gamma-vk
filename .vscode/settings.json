@@ -3,6 +3,7 @@
         "RAII",
         "SPIR",
         "spirv",
+        "thiserror",
         "vulkano"
     ]
 }
