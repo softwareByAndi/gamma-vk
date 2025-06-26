@@ -2,6 +2,19 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Prompting Execution of Workflows
+
+if a prompt starts with `WF `, it means to follow the prompts defined in the matching workflow found in [/workflows](workflows/*)
+
+### examples
+- `WF session start` = `follow the prompts defined in /workflows/session_start.workflow`
+- `WF simple_critical_analysis` = `follow the prompts defined in /workflows/simple_critical_analysis.workflow`
+- `WF quality gate` = `follow the prompts defined in /workflows/quality_gate.workflow`
+- `WF task_planning` = `follow the prompts defined in /workflows/task_planning.workflow`
+
+- `WF quick review` = (custom alias for simple_critical_analysis) `follow the prompts defined in /workflows/simple_critical_analysis.workflow`
+
+
 ## Project Overview
 
 Gamma-VK is a safe, performant Vulkan graphics engine built in Rust. The project follows structured iterative development with 2-week iterations, currently transitioning from a working "Hello World" Vulkan application to a proper library architecture with comprehensive testing and documentation.
@@ -160,11 +173,13 @@ The project is organized into planned iterations:
 3. **Resource Management** - Texture system and advanced memory management
 
 ### Daily Workflow
-1. Check [TODO.md](TODO.md) for current iteration tasks
-2. Update task status as work progresses
-3. Run quality checks before committing (`cargo test`, `cargo clippy`, `cargo fmt`)
-4. Update documentation for new features
-5. Follow iterative development principles from [docs/ITERATIVE_DEVELOPMENT.md](docs/ITERATIVE_DEVELOPMENT.md)
+1. **Session Start**: Run `workflows/session_start.workflow` for comprehensive session initialization
+2. Check [TODO.md](TODO.md) for current iteration tasks (part of session start workflow)
+3. Update task status as work progresses  
+4. Run quality checks before committing (`cargo test`, `cargo clippy`, `cargo fmt`)
+5. Update documentation for new features
+6. Follow iterative development principles from [docs/ITERATIVE_DEVELOPMENT.md](docs/ITERATIVE_DEVELOPMENT.md)
+7. **Session End**: Document insights and decisions in workflow_sessions/{i}_{task_name}.log
 
 ### Quality Standards
 - All public APIs must have rustdoc documentation
@@ -239,9 +254,45 @@ When adding new functionality:
 
 The project architecture is designed to support incremental development and extension without requiring major architectural changes.
 
+## AI Workflow Management System
+
+The project includes a structured workflow system to ensure consistent, high-quality development sessions with staff engineer-level analysis.
+
+### Workflow Files
+- **[workflows/session_start.workflow](workflows/session_start.workflow)** - Comprehensive session initialization procedure
+- **[workflows/iteration_review.workflow](workflows/iteration_review.workflow)** - Mid-iteration health checks and risk assessment
+- **[workflows/task_planning.workflow](workflows/task_planning.workflow)** - Complex task breakdown and planning methodology
+- **[workflows/quality_gate.workflow](workflows/quality_gate.workflow)** - Pre-commit quality validation checklist
+
+### Session Logging
+Session insights and architectural decisions are documented in:
+- **workflow_sessions/{i}_{task_name}.log** - Numbered session logs capturing key decisions, analysis, and next steps
+
+### Usage Examples
+```bash
+# Start a development session (recommended)
+# Follow procedures in workflows/session_start.workflow
+
+# Mid-iteration health check
+# Follow procedures in workflows/iteration_review.workflow
+
+# Planning complex tasks
+# Follow procedures in workflows/task_planning.workflow
+
+# Pre-commit validation
+# Follow procedures in workflows/quality_gate.workflow
+```
+
+### Benefits
+- **Consistency**: Standardized procedures across all development sessions
+- **Knowledge Retention**: Session logs preserve architectural decisions and insights
+- **Quality Assurance**: Systematic checks prevent oversights and regressions
+- **Staff Engineer Perspective**: Built-in critical analysis and long-term thinking
+
 ## Key Documentation
 
 - **[TODO.md](TODO.md)** - Current iteration status, tasks, and development roadmap
+- **[workflow_sessions/](workflow_sessions/)** - Development session logs with key insights and decisions
 - **[docs/ITERATIVE_DEVELOPMENT.md](docs/ITERATIVE_DEVELOPMENT.md)** - Comprehensive iterative development methodology
 - **[docs/DESIGN_PRINCIPLES.md](docs/DESIGN_PRINCIPLES.md)** - Core architectural principles and design philosophy
 - **[docs/STYLE_GUIDE.md](docs/STYLE_GUIDE.md)** - Detailed coding standards and conventions
