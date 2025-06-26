@@ -7,8 +7,8 @@ This document tracks the development progress of Gamma-VK using iterative develo
 - **Project Phase**: Core Development
 - **Current Iteration**: Basic Rendering (Iteration 2)
 - **Next Iteration**: Error Handling Improvements (Iteration 3)
-- **Current Session Log**: `session_logs/5_shader_system.log.md`
-- **Previous Session Log**: `session_logs/4_buffer_test_failure_analysis.log.md`
+- **Current Session Log**: None (start of new session)
+- **Previous Session Log**: `session_logs/9_buffer_testing.log.md`
 
 ## Iteration Strategy
 Based on staff engineer reviews, the approach focuses on **working software over perfect process**. Priorities:
@@ -115,11 +115,28 @@ Based on staff engineer reviews, the approach focuses on **working software over
 - **Documentation**: Comprehensive rustdoc with examples
 - **Ready for**: Day 2 Shader System implementation
 
-- [ ] **Shader System** (Day 2)
+- [ ] **Complete Buffer Testing** (Day 2a - TDD)
+  - [ ] Review FIXME comment in test_buffer_move_semantics test
+  - [ ] Implement remaining buffer tests from buffer.tests.md:
+    - [ ] Resource exhaustion tests (memory limits)
+    - [ ] Platform-specific tests (if hardware available)
+    - [ ] Memory alignment verification tests
+    - [ ] Concurrent operation safety tests
+  - [ ] Refactor buffer module based on test findings:
+    - [ ] Add size validation to prevent zero-size panics
+    - [ ] Consider buffer pooling for efficiency
+
+- [ ] **Shader System** (Day 2b - TDD)
+  - [ ] Create `tests/shader.tests.md` with comprehensive test plan
+  - [ ] Write shader tests BEFORE implementation:
+    - [ ] SPIR-V validation tests
+    - [ ] Shader compilation error handling
+    - [ ] Shader module lifecycle tests
+    - [ ] Entry point validation
   - [ ] Create `src/shader.rs` with embedded SPIR-V loading
   - [ ] Add simple vertex/fragment shader loading functions
   - [ ] Include basic triangle shaders as embedded bytes
-  - [ ] Basic shader validation (compilation check only)
+  - [ ] Ensure all tests pass (don't adjust the tests to pass. They're defining expected behavior. Implement the functionality to meet the expected behavior)
 
 - [ ] **Pipeline Creation** (Day 3)
   - [ ] Create `src/pipeline.rs` with graphics pipeline wrapper
@@ -254,6 +271,7 @@ If any iteration becomes blocked:
 - **Type Safety**: Distinct types for different resource usages
 - **Error Handling**: Comprehensive error types with recovery strategies
 - **Modularity**: Functional organization, clear public interfaces
+- **Test-Driven Development**: Write tests first to specify behavior, then implement to pass tests
 
 ### Technical Notes
 - MoltenVK requires `khr_portability_enumeration` extension
@@ -316,4 +334,4 @@ Every iteration should have mid-week health checks:
 - **Iterative Error Handling**: Improve error handling incrementally, not upfront
 - **Justify Complexity**: Only add infrastructure when benefits are clear
 
-Last Updated: 2024-06-25 (Revised based on second staff engineer review)
+Last Updated: 2025-06-26 (Shifted to Test-Driven Development approach)

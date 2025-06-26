@@ -418,11 +418,6 @@ fn test_missing_shader_error() {
 }
 ```
 
-### CI Environment Considerations
-- **Required files**: Include in repository, fail if missing
-- **Vulkan drivers**: May legitimately not be available in CI
-- **Platform differences**: Handle gracefully (e.g., MoltenVK vs native Vulkan)
-
 ### Test Organization
 ```rust
 // Group related tests
