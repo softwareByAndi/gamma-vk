@@ -2,17 +2,6 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Prompting Execution of Workflows
-
-if a prompt starts with `WF `, it means to follow the prompts defined in the matching workflow found in [/workflows](workflows/*)
-
-### examples
-- `WF quick start` = `follow the prompts defined in /workflows/quick_start.workflow`
-- `WF session start` = `follow the prompts defined in /workflows/session_start.workflow`
-- `WF review` = `follow the prompts defined in /workflows/review.workflow`
-- `WF quality gate` = `follow the prompts defined in /workflows/quality_gate.workflow`
-- `WF task_planning` = `follow the prompts defined in /workflows/task_planning.workflow`
-
 ## Project Overview
 
 Gamma-VK is a safe, performant Vulkan graphics engine built in Rust. The project follows structured iterative development with 2-week iterations, currently transitioning from a working "Hello World" Vulkan application to a proper library architecture with comprehensive testing and documentation.
@@ -207,7 +196,7 @@ The project is organized into planned iterations:
 4. Run quality checks before committing (`cargo test`, `cargo clippy`, `cargo fmt`)
 5. Update documentation for new features
 6. Follow iterative development principles from [docs/ITERATIVE_DEVELOPMENT.md](docs/ITERATIVE_DEVELOPMENT.md)
-7. **Session End**: Document insights and decisions in workflow_sessions/{i}_{task_name}.log.md
+7. **Session End**: Document insights and decisions in session_logs/{i}_{task_name}.log.md
 
 ### Quality Standards
 - All public APIs must have rustdoc documentation
@@ -294,7 +283,7 @@ The project includes a structured workflow system to ensure consistent, high-qua
 
 ### Session Logging
 Session insights and architectural decisions are documented in:
-- **workflow_sessions/{i}_{task_name}.log.md** - Numbered session logs capturing key decisions, analysis, and next steps
+- **session_logs/{i}_{task_name}.log.md** - Numbered session logs capturing key decisions, analysis, and next steps
 
 ### Usage Examples
 ```bash
@@ -320,7 +309,7 @@ Session insights and architectural decisions are documented in:
 ## Key Documentation
 
 - **[TODO.md](TODO.md)** - Current iteration status, tasks, and development roadmap
-- **[workflow_sessions/](workflow_sessions/)** - Development session logs with key insights and decisions
+- **[session_logs/](session_logs/)** - Development session logs with key insights and decisions
 - **[debug/](debug/)** - Debug notes capturing API gotchas, architectural decisions, and lessons learned
 - **[docs/ITERATIVE_DEVELOPMENT.md](docs/ITERATIVE_DEVELOPMENT.md)** - Comprehensive iterative development methodology
 - **[docs/DESIGN_PRINCIPLES.md](docs/DESIGN_PRINCIPLES.md)** - Core architectural principles and design philosophy

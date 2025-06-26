@@ -54,7 +54,7 @@ in the spirit of iterative development, again, analyze {task} with the critical 
 - [ ] **Testing Requirements** - What additional tests are needed?
 
 **Documentation:**
-- [ ] **Session Log** - Record key insights in workflow_sessions/{i}_critical_analysis_{task}.log
+- [ ] **Session Log** - Record key insights in session_logs/{i}_critical_analysis_{task}.log
 - [ ] **TODO.md Updates** - Add actionable items discovered during analysis
 - [ ] **Architecture Notes** - Update design docs if architectural decisions were made
 
