@@ -7,6 +7,8 @@ This document tracks the development progress of Gamma-VK using iterative develo
 - **Project Phase**: Core Development
 - **Current Iteration**: Basic Rendering (Iteration 2)
 - **Next Iteration**: Error Handling Improvements (Iteration 3)
+- **Current Session Log**: `workflow_sessions/5_shader_system.log.md`
+- **Previous Session Log**: `workflow_sessions/4_buffer_test_failure_analysis.log.md`
 
 ## Iteration Strategy
 Based on staff engineer reviews, the approach focuses on **working software over perfect process**. Priorities:
