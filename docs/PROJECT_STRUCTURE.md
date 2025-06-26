@@ -27,6 +27,12 @@ gamma-vk/
 │       ├── texture_loading.md
 │       └── custom_shaders.md
 │
+├── workflows/                 # used to quickly prompt a common series of tasks
+│   ├── session_start.workflow # all the tasks to start a new development session
+│   ├── quality_gate.workflow  # checklist to ensure code quality
+│   ├── simple_critical_analysis.workflow # a small set of tasks to double check that a task is being implemented well
+│   └── etc...
+
 ├── src/                       # Source code
 │   ├── lib.rs                 # Main library entry point
 │   ├── 
