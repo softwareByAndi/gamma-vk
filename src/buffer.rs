@@ -42,13 +42,13 @@ impl Buffer {
     /// * The requested size exceeds device limits
     /// * The usage flags are invalid or unsupported
     pub fn new_host_visible(
-        _device: Arc<Device>,
-        allocator: Arc<StandardMemoryAllocator>,
+        _device: &Arc<Device>,
+        allocator: &Arc<StandardMemoryAllocator>,
         size: u64,
         usage: BufferUsage,
     ) -> Result<Self> {
         let buffer = VulkanoBuffer::new_slice::<u8>(
-            allocator,
+            allocator.clone(),
             BufferCreateInfo {
                 usage,
                 ..Default::default()
@@ -84,13 +84,13 @@ impl Buffer {
     /// Device-local buffers cannot be directly written from CPU.
     /// Use staging buffers and transfer operations for data upload.
     pub fn new_device_local(
-        _device: Arc<Device>,
-        allocator: Arc<StandardMemoryAllocator>,
+        _device: &Arc<Device>,
+        allocator: &Arc<StandardMemoryAllocator>,
         size: u64,
         usage: BufferUsage,
     ) -> Result<Self> {
         let buffer = VulkanoBuffer::new_slice::<u8>(
-            allocator,
+            allocator.clone(),
             BufferCreateInfo {
                 usage,
                 ..Default::default()
@@ -117,14 +117,14 @@ impl Buffer {
     /// * `usage` - Intended usage flags for the buffer
     /// * `allocation_info` - Custom allocation preferences
     pub fn new_custom(
-        _device: Arc<Device>,
-        allocator: Arc<StandardMemoryAllocator>,
+        _device: &Arc<Device>,
+        allocator: &Arc<StandardMemoryAllocator>,
         size: u64,
         usage: BufferUsage,
         allocation_info: AllocationCreateInfo,
     ) -> Result<Self> {
         let buffer = VulkanoBuffer::new_slice::<u8>(
-            allocator,
+            allocator.clone(),
             BufferCreateInfo {
                 usage,
                 ..Default::default()
@@ -207,8 +207,8 @@ impl Buffer {
     /// Real implementation would require command buffer recording and submission.
     pub fn upload_via_staging(
         &self,
-        _device: Arc<Device>,
-        _allocator: Arc<StandardMemoryAllocator>,
+        _device: &Arc<Device>,
+        _allocator: &Arc<StandardMemoryAllocator>,
         _data: &[u8],
     ) -> Result<()> {
         // TODO: Implement staging buffer pattern for device-local buffers
@@ -252,8 +252,8 @@ pub struct VertexBuffer {
 impl VertexBuffer {
     /// Create a new host-visible vertex buffer (can be written from CPU)
     pub fn new_host_visible(
-        device: Arc<Device>,
-        allocator: Arc<StandardMemoryAllocator>,
+        device: &Arc<Device>,
+        allocator: &Arc<StandardMemoryAllocator>,
         size: u64,
     ) -> Result<Self> {
         let buffer = Buffer::new_host_visible(device, allocator, size, BufferUsage::VERTEX_BUFFER)?;
@@ -262,8 +262,8 @@ impl VertexBuffer {
 
     /// Create a new device-local vertex buffer (optimal for GPU access)
     pub fn new_device_local(
-        device: Arc<Device>,
-        allocator: Arc<StandardMemoryAllocator>,
+        device: &Arc<Device>,
+        allocator: &Arc<StandardMemoryAllocator>,
         size: u64,
     ) -> Result<Self> {
         let buffer = Buffer::new_device_local(
@@ -297,8 +297,8 @@ pub struct IndexBuffer {
 impl IndexBuffer {
     /// Create a new host-visible index buffer (can be written from CPU)
     pub fn new_host_visible(
-        device: Arc<Device>,
-        allocator: Arc<StandardMemoryAllocator>,
+        device: &Arc<Device>,
+        allocator: &Arc<StandardMemoryAllocator>,
         size: u64,
     ) -> Result<Self> {
         let buffer = Buffer::new_host_visible(device, allocator, size, BufferUsage::INDEX_BUFFER)?;
@@ -307,8 +307,8 @@ impl IndexBuffer {
 
     /// Create a new device-local index buffer (optimal for GPU access)
     pub fn new_device_local(
-        device: Arc<Device>,
-        allocator: Arc<StandardMemoryAllocator>,
+        device: &Arc<Device>,
+        allocator: &Arc<StandardMemoryAllocator>,
         size: u64,
     ) -> Result<Self> {
         let buffer = Buffer::new_device_local(
@@ -342,8 +342,8 @@ pub struct UniformBuffer {
 impl UniformBuffer {
     /// Create a new host-visible uniform buffer (can be updated from CPU)
     pub fn new_host_visible(
-        device: Arc<Device>,
-        allocator: Arc<StandardMemoryAllocator>,
+        device: &Arc<Device>,
+        allocator: &Arc<StandardMemoryAllocator>,
         size: u64,
     ) -> Result<Self> {
         let buffer =
@@ -353,8 +353,8 @@ impl UniformBuffer {
 
     /// Create a new device-local uniform buffer (requires staging for updates)
     pub fn new_device_local(
-        device: Arc<Device>,
-        allocator: Arc<StandardMemoryAllocator>,
+        device: &Arc<Device>,
+        allocator: &Arc<StandardMemoryAllocator>,
         size: u64,
     ) -> Result<Self> {
         let buffer = Buffer::new_device_local(
@@ -443,12 +443,8 @@ mod tests {
     #[test]
     fn test_host_visible_buffer_creation() {
         if let Some((device, allocator)) = create_test_device() {
-            let buffer = Buffer::new_host_visible(
-                device,
-                allocator.clone(),
-                1024,
-                BufferUsage::VERTEX_BUFFER,
-            );
+            let buffer =
+                Buffer::new_host_visible(&device, &allocator, 1024, BufferUsage::VERTEX_BUFFER);
 
             assert!(
                 buffer.is_ok(),
@@ -466,8 +462,8 @@ mod tests {
     fn test_device_local_buffer_creation() {
         if let Some((device, allocator)) = create_test_device() {
             let buffer = Buffer::new_device_local(
-                device,
-                allocator.clone(),
+                &device,
+                &allocator,
                 1024,
                 BufferUsage::VERTEX_BUFFER | BufferUsage::TRANSFER_DST,
             );
@@ -488,12 +484,8 @@ mod tests {
     #[test]
     fn test_host_visible_buffer_can_be_written() {
         if let Some((device, allocator)) = create_test_device() {
-            let buffer = Buffer::new_host_visible(
-                device,
-                allocator.clone(),
-                1024,
-                BufferUsage::VERTEX_BUFFER,
-            );
+            let buffer =
+                Buffer::new_host_visible(&device, &allocator, 1024, BufferUsage::VERTEX_BUFFER);
 
             if let Ok(buffer) = buffer {
                 // Test the core requirement: Can I write vertex data to a vertex buffer?
@@ -521,8 +513,8 @@ mod tests {
     fn test_device_local_buffer_cannot_be_written_directly() {
         if let Some((device, allocator)) = create_test_device() {
             let buffer = Buffer::new_device_local(
-                device,
-                allocator.clone(),
+                &device,
+                &allocator,
                 1024,
                 BufferUsage::VERTEX_BUFFER | BufferUsage::TRANSFER_DST,
             );
@@ -544,12 +536,8 @@ mod tests {
     #[test]
     fn test_buffer_write_data_bounds_checking() {
         if let Some((device, allocator)) = create_test_device() {
-            let buffer = Buffer::new_host_visible(
-                device,
-                allocator.clone(),
-                100,
-                BufferUsage::VERTEX_BUFFER,
-            );
+            let buffer =
+                Buffer::new_host_visible(&device, &allocator, 100, BufferUsage::VERTEX_BUFFER);
 
             if let Ok(buffer) = buffer {
                 // Test core safety requirement: Buffer should reject oversized data
@@ -582,8 +570,7 @@ mod tests {
     #[test]
     fn test_vertex_buffer_creation() {
         if let Some((device, allocator)) = create_test_device() {
-            let vertex_buffer =
-                VertexBuffer::new_host_visible(device.clone(), allocator.clone(), 2048);
+            let vertex_buffer = VertexBuffer::new_host_visible(&device, &allocator, 2048);
 
             assert!(
                 vertex_buffer.is_ok(),
@@ -593,7 +580,7 @@ mod tests {
             assert_eq!(vertex_buffer.size(), 2048);
 
             // Test device-local variant
-            let device_vertex_buffer = VertexBuffer::new_device_local(device, allocator, 2048);
+            let device_vertex_buffer = VertexBuffer::new_device_local(&device, &allocator, 2048);
             assert!(
                 device_vertex_buffer.is_ok(),
                 "Should be able to create device-local vertex buffer"
@@ -606,8 +593,7 @@ mod tests {
     #[test]
     fn test_index_buffer_creation() {
         if let Some((device, allocator)) = create_test_device() {
-            let index_buffer =
-                IndexBuffer::new_host_visible(device.clone(), allocator.clone(), 512);
+            let index_buffer = IndexBuffer::new_host_visible(&device, &allocator, 512);
 
             assert!(
                 index_buffer.is_ok(),
@@ -617,7 +603,7 @@ mod tests {
             assert_eq!(index_buffer.size(), 512);
 
             // Test device-local variant
-            let device_index_buffer = IndexBuffer::new_device_local(device, allocator, 512);
+            let device_index_buffer = IndexBuffer::new_device_local(&device, &allocator, 512);
             assert!(
                 device_index_buffer.is_ok(),
                 "Should be able to create device-local index buffer"
@@ -630,8 +616,7 @@ mod tests {
     #[test]
     fn test_uniform_buffer_creation() {
         if let Some((device, allocator)) = create_test_device() {
-            let uniform_buffer =
-                UniformBuffer::new_host_visible(device.clone(), allocator.clone(), 256);
+            let uniform_buffer = UniformBuffer::new_host_visible(&device, &allocator, 256);
 
             assert!(
                 uniform_buffer.is_ok(),
@@ -641,7 +626,7 @@ mod tests {
             assert_eq!(uniform_buffer.size(), 256);
 
             // Test device-local variant
-            let device_uniform_buffer = UniformBuffer::new_device_local(device, allocator, 256);
+            let device_uniform_buffer = UniformBuffer::new_device_local(&device, &allocator, 256);
             assert!(
                 device_uniform_buffer.is_ok(),
                 "Should be able to create device-local uniform buffer"
@@ -655,11 +640,9 @@ mod tests {
     fn test_buffer_types_have_correct_usage_semantics() {
         if let Some((device, allocator)) = create_test_device() {
             // Test core requirement: Different buffer types should be semantically distinct
-            let vertex_buffer =
-                VertexBuffer::new_host_visible(device.clone(), allocator.clone(), 1024);
-            let index_buffer =
-                IndexBuffer::new_host_visible(device.clone(), allocator.clone(), 512);
-            let uniform_buffer = UniformBuffer::new_host_visible(device, allocator, 256);
+            let vertex_buffer = VertexBuffer::new_host_visible(&device, &allocator, 1024);
+            let index_buffer = IndexBuffer::new_host_visible(&device, &allocator, 512);
+            let uniform_buffer = UniformBuffer::new_host_visible(&device, &allocator, 256);
 
             if let (Ok(vb), Ok(ib), Ok(ub)) = (vertex_buffer, index_buffer, uniform_buffer) {
                 // Verify each buffer type enforces its intended usage
@@ -701,15 +684,11 @@ mod tests {
             let allocator_weak = Arc::downgrade(&allocator);
 
             {
-                let _buffer1 = Buffer::new_host_visible(
-                    device.clone(),
-                    allocator.clone(),
-                    1024,
-                    BufferUsage::VERTEX_BUFFER,
-                );
+                let _buffer1 =
+                    Buffer::new_host_visible(&device, &allocator, 1024, BufferUsage::VERTEX_BUFFER);
                 let _buffer2 = Buffer::new_device_local(
-                    device.clone(),
-                    allocator.clone(),
+                    &device,
+                    &allocator,
                     2048,
                     BufferUsage::INDEX_BUFFER | BufferUsage::TRANSFER_DST,
                 );
@@ -719,7 +698,7 @@ mod tests {
 
             // Test that allocator remains functional after buffer cleanup
             let _buffer3 =
-                Buffer::new_host_visible(device, allocator, 512, BufferUsage::UNIFORM_BUFFER);
+                Buffer::new_host_visible(&device, &allocator, 512, BufferUsage::UNIFORM_BUFFER);
             assert!(
                 allocator_weak.upgrade().is_some(),
                 "Allocator should remain functional after buffer cleanup"
