@@ -18,24 +18,24 @@ always feel free to check appropriate documentation if you are unsure about how 
 
 ```bash
 # Index all documentation (first time or after major changes)
-python semantic_search.py index .
+python tools/semantic_search.py index .
 
 # Index specific directories
-python semantic_search.py index docs/
+python tools/semantic_search.py index docs/
 
 # Index only specific file types
-python semantic_search.py index . --extensions .md .txt
+python tools/semantic_search.py index . --extensions .md .txt
 
 # Search for concepts semantically
-python semantic_search.py search "how to handle buffer allocation"
-python semantic_search.py search "error handling patterns"
-python semantic_search.py search "vulkan initialization steps"
+python tools/semantic_search.py search "how to handle buffer allocation"
+python tools/semantic_search.py search "error handling patterns"
+python tools/semantic_search.py search "vulkan initialization steps"
 
 # Get more results
-python semantic_search.py search "memory management" -n 10
+python tools/semantic_search.py search "memory management" -n 10
 
 # Check index statistics
-python semantic_search.py stats
+python tools/semantic_search.py stats
 ```
 
 ### Building and Running

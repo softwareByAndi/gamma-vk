@@ -56,7 +56,7 @@ def load_config() -> Dict[str, Any]:
 
 # Load config once at module level
 CONFIG = load_config()
-INDEX_DIR = Path('tools/.semantic_index_v2')
+INDEX_DIR = Path('tools/.semantic_index')
 
 # Module-level state for expensive objects
 _model = None
@@ -226,22 +226,9 @@ def search_documents(query: str, n_results: int = 5) -> List[SearchResult]:
         doc_id = results['ids'][0][i]
         filepath, chunk_idx = doc_id.split('::')
         metadata = results['metadatas'][0][i]
-        
-        # Truncate content for display while preserving structure
-        content = results['documents'][0][i]
-        if len(content) > 400:
-            # Try to truncate at a newline or space to avoid cutting mid-word
-            truncate_point = 400
-            # Look for newline within last 50 chars
-            last_newline = content.rfind('\n', 350, 400)
-            if last_newline > 0:
-                truncate_point = last_newline
-            else:
-                # Look for space within last 20 chars
-                last_space = content.rfind(' ', 380, 400)
-                if last_space > 0:
-                    truncate_point = last_space
-            content = content[:truncate_point] + '...'
+        content = results['documents'][0][i][:200]
+        if len(content) < 200:
+            content = f"{content}..." 
         
         search_results.append(SearchResult(
             filepath=Path(filepath),
