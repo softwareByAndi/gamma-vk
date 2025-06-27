@@ -1,4 +1,4 @@
-# TDD Architecture Planning Workflow
+# TDD Planning Architecture
 
 ## Overview
 This workflow guides the development of architecture plans that prioritize Test-Driven Development (TDD) principles. The goal is to design features where tests define behavior before implementation begins.
