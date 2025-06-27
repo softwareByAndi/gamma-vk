@@ -4,8 +4,9 @@
 This document tracks the development progress of Gamma-VK using iterative development principles. Each iteration focuses on delivering working, tested functionality while building toward a complete graphics engine.
 
 ## Current Status
-- **Project Phase**: Core Development
-- **Current Iteration**: Basic Rendering (Iteration 2)
+- **Project Phase**: Architecture Vetting
+- **Current Iteration**: Architecture Vetting Phase (Urgent)
+- **Active Iteration**: Basic Rendering (Iteration 2) - PAUSED
 - **Next Iteration**: Error Handling Improvements (Iteration 3)
 - **Current Session Log**: None
 - **Previous Session Log**: `session_logs/10_complete_buffer_testing_shader_tdd.log.md`
@@ -175,11 +176,50 @@ Based on staff engineer reviews, the approach focuses on **working software over
 
 ---
 
+### Architecture Vetting Phase (Immediate Priority)
+**Goal**: Review and validate all recent architecture plans and implementations
+**Duration**: 1-2 days
+**Status**: 🚧 IN PROGRESS
+**Dependencies**: None (urgent review needed)
+
+#### Must Have (MVP)
+- [ ] **Vet Architecture Plans** (High Priority)
+  - [ ] Review all plans in `docs/architecture/` directory
+  - [ ] Validate architectural decisions against DESIGN_PRINCIPLES.md
+  - [ ] Ensure consistency across different architecture documents
+  - [ ] Identify any conflicts or implementation gaps
+
+- [ ] **Vet ECS Implementation** (High Priority)
+  - [ ] Review ECS skeleton code in `src/ecs/`
+  - [ ] Validate against ECS architecture plan
+  - [ ] Check for proper RAII patterns and type safety
+  - [ ] Ensure test coverage follows TDD approach
+
+- [ ] **Update Documentation** (Medium Priority)
+  - [ ] Remove references to deleted `plans/` folder
+  - [ ] Update CLAUDE.md if it references plans/
+  - [ ] Check other documentation files for outdated references
+
+- [ ] **Vet Error Handling Example** (Medium Priority)
+  - [ ] Review `tests/error_handling_tdd_example.rs`
+  - [ ] Ensure it follows project's error handling patterns
+  - [ ] Validate TDD approach implementation
+  - [ ] Check integration with existing error system
+
+#### Success Criteria (Measurable)
+- [ ] All architecture documents reviewed and approved
+- [ ] ECS implementation aligns with architecture plans
+- [ ] No dangling references to deleted directories
+- [ ] All code follows established patterns and principles
+- [ ] Documentation is consistent and up-to-date
+
+---
+
 ### Iteration 3: Error Handling Improvements (Planned)
 **Goal**: Iteratively improve error handling and add basic texture support
 **Duration**: 1 week
 **Status**: 📋 BACKLOG
-**Dependencies**: Iteration 2 (Basic Rendering)
+**Dependencies**: Iteration 2 (Basic Rendering), Architecture Vetting
 
 #### Must Have (MVP)
 - [ ] **Enhanced Error Handling** (Day 1-2)
