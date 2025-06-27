@@ -4,9 +4,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Gamma-VK is a safe, performant Vulkan graphics engine built in Rust. The project follows structured iterative development with 2-week iterations, currently transitioning from a working "Hello World" Vulkan application to a proper library architecture with comprehensive testing and documentation.
+Gamma-VK is a safe, performant Vulkan graphics engine built in Rust. The project follows structured iterative development with a pragmatic, test-driven approach.
 
-**Current Status**: See [TODO.md](TODO.md) for detailed iteration progress, current tasks, and development roadmap.
+**Key Characteristics**:
+- **Test-Driven Development**: Tests written before implementation
+- **RAII Resource Management**: Automatic GPU resource cleanup via Rust's ownership system  
+- **Type-Safe APIs**: Distinct types prevent common graphics programming errors
+- **Iterative Architecture**: Building incrementally from foundation to full engine
+
+**For Current Status**: Always check [TODO.md](TODO.md) for iteration progress and active tasks
 
 ## Development Commands
 
@@ -130,19 +136,26 @@ The architecture supports extensibility through:
 - **Asset loaders** for different file formats
 - **Debug markers** for profiling and debugging
 
-### Module Organization
+### Current Module Structure
 
-The codebase is organized by functionality rather than type:
+The project currently has a flat module structure in `src/`:
 
-- `core/` - Vulkan context, device, and surface management
-- `memory/` - Memory allocation, buffers, images, resource pooling
-- `command/` - Command buffer management and synchronization
-- `pipeline/` - Graphics/compute pipelines, shaders, caching
-- `render/` - High-level rendering, scene management, cameras
-- `geometry/` - Mesh handling, vertex formats, primitives
-- `texture/` - Texture management, samplers, atlases
-- `platform/` - Platform-specific implementations
-- `util/` - Math, timing, configuration utilities
+- `context.rs` - Vulkan instance, device, and surface management
+- `buffer.rs` - Type-safe buffer abstractions (VertexBuffer, IndexBuffer, UniformBuffer)
+- `shader.rs` - Shader module loading from SPIR-V files
+- `error.rs` - Comprehensive error type hierarchy
+- `lib.rs` - Public API exports
+
+### Future Architecture Vision
+
+The project will evolve toward a hierarchical module structure:
+
+- `core/` - Expanded context and device management
+- `memory/` - Advanced allocation strategies and pooling
+- `command/` - Command buffer recording and synchronization
+- `pipeline/` - Pipeline caching and state management
+- `render/` - High-level rendering abstractions
+- Additional modules as the engine grows
 
 ## MoltenVK Configuration
 
@@ -198,22 +211,52 @@ When working on specific modules or encountering issues, consult relevant debug 
 - Type system issues and their resolutions
 - Wrong assumptions corrected during development
 
+### Test-Driven Development (TDD)
+
+The project has adopted TDD as its primary development methodology. This means:
+
+1. **Write Tests First**: Define expected behavior through tests before implementing
+2. **Red-Green-Refactor Cycle**:
+   - Red: Write a failing test
+   - Green: Write minimal code to make it pass
+   - Refactor: Improve code while keeping tests green
+3. **Comprehensive Test Coverage**: Both unit tests and integration tests
+4. **Test as Documentation**: Tests serve as executable specifications
+
+#### TDD Workflow Example
+```rust
+// 1. Write the test first (defines the API)
+#[test]
+fn test_vertex_buffer_creation() {
+    let buffer = VertexBuffer::<Vertex>::new(&context, &vertices)?;
+    assert_eq!(buffer.len(), vertices.len());
+}
+
+// 2. Then implement to make it pass
+```
+
 ### Iterative Development Approach
 The project follows a structured iterative development methodology with:
-- **2-week iterations** focused on delivering working, tested functionality
+- **Time-boxed iterations** focused on delivering working, tested functionality
 - **Test-driven development** with comprehensive unit and integration testing
 - **Quality gates** that must be met before task completion
 - **Incremental architecture** building from foundation to advanced features
+- **Pragmatic approach**: Working software over perfect process
 
-### Current Development Phase
-**See [TODO.md](TODO.md) for up-to-date iteration status and task details.**
+### Development Phases
 
-The project is organized into planned iterations:
+The project progresses through planned iterations that build upon each other:
+
 1. **Foundation** - Core architecture, error handling, Vulkan context management
 2. **Basic Rendering** - Triangle rendering with shader system and pipelines  
 3. **Resource Management** - Texture system and advanced memory management
+4. **Advanced Features** - Scene management, materials, and optimization
 
-### Daily Session Notes
+**Always check [TODO.md](TODO.md) for current iteration and specific tasks**
+
+### Daily Session Workflow
+1. Check [TODO.md](TODO.md) for current iteration and tasks
+2. Create/update session log when starting significant work
 3. Update task status as work progresses  
 4. Run quality checks before committing (`cargo test`, `cargo clippy`, `cargo fmt`)
 5. Update documentation for new features

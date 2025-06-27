@@ -4,10 +4,11 @@
 Capture development insights, API gotchas, and architectural decisions to prevent repeated mistakes and preserve knowledge.
 
 ## Files
-- **`debug_buffer.md`** - Buffer implementation lessons
-- **`debug_vulkano_api.md`** - Vulkano library patterns  
-- **`debug_architecture.md`** - Architecture decision rationale
-- **`debug_rust_types.md`** - Rust type system gotchas
+- **`buffer.debug.md`** - Buffer implementation lessons
+- **`vulkano_api.debug.md`** - Vulkano library patterns  
+- **`architecture.debug.md`** - Architecture decision rationale
+- **`rust_types.debug.md`** - Rust type system gotchas
+- `ls -l debug/` - List all debug files
 
 ## When to Add Entries
 - Wrong assumptions corrected by documentation
