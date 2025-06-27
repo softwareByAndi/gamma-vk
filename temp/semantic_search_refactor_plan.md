@@ -1,24 +1,60 @@
-#!/usr/bin/env python3
-"""
-Semantic Search Tool for Gamma-VK Documentation (Refactored)
+# Semantic Search Re-Architecture Plan
 
-This tool indexes and searches through project documentation using semantic embeddings,
-allowing for natural language queries instead of exact string matching.
-"""
+## Executive Summary
 
-import argparse
-import hashlib
-import json
-from datetime import datetime
-from pathlib import Path
-from typing import List, Dict, Any
-from dataclasses import dataclass
+The current `semantic_search.py` implementation works but contains unnecessary complexity that makes it harder to read and maintain. This plan outlines a simpler, more Pythonic approach that maintains **all existing functionality** while improving readability and maintainability.
 
-import chromadb
-from sentence_transformers import SentenceTransformer
+## Current Issues
 
+### 1. Overly Complex Class Structure
+- Single class (`DocumentIndexer`) doing too much
+- Class state management for what could be simpler functions
+- Unnecessary persistence of model and client objects
 
-# Data Models
+### 2. Exception Handling Anti-patterns
+- Bare `except:` clauses that hide errors
+- Silent failures in configuration loading
+- No clear error messages for users
+
+### 3. Complex Data Structures
+- ChromaDB returns nested lists/dicts that require confusing indexing
+- Manual embedding generation adds complexity
+- Metadata management is verbose
+
+### 4. Configuration Over-engineering
+- JSON config file for simple excluded directories
+- Default fallbacks buried in methods
+- Config loading failures silently ignored
+
+### 5. Verbose Implementation
+- 238 lines for what could be ~100 lines
+- Repetitive code patterns
+- Manual string formatting instead of using Python features
+
+## Proposed Architecture
+
+### 1. Hybrid Functional Approach
+Use module-level functions with a minimal state container for expensive objects:
+```python
+# Module-level state (initialized once)
+_model = None
+_client = None
+
+def get_model():
+    """Lazy-load the sentence transformer model."""
+    global _model
+    if _model is None:
+        _model = SentenceTransformer('all-MiniLM-L6-v2')
+    return _model
+
+def index_documents(directory: Path, extensions: List[str] = None) -> None
+def search_documents(query: str, n_results: int = 5) -> List[SearchResult]
+def show_stats() -> Stats
+```
+
+### 2. Enhanced Data Models
+Use dataclasses with complete metadata preservation:
+```python
 @dataclass
 class SearchResult:
     filepath: Path
@@ -26,16 +62,27 @@ class SearchResult:
     score: float
     chunk_index: int
     total_chunks: int
-
+    
+@dataclass
+class DocumentMetadata:
+    filepath: str
+    filename: str
+    extension: str
+    chunk_index: int
+    total_chunks: int
+    file_hash: str
+    indexed_at: str
 
 @dataclass
 class Stats:
     total_files: int
     total_chunks: int
     index_location: Path
+```
 
-
-# Configuration
+### 3. Configuration Support
+Maintain external configuration with proper defaults:
+```python
 def load_config() -> Dict[str, Any]:
     """Load configuration from JSON file with defaults."""
     config_path = Path(__file__).parent / "semantic_search_config.json"
@@ -53,24 +100,26 @@ def load_config() -> Dict[str, Any]:
     except FileNotFoundError:
         return defaults
 
-
 # Load config once at module level
 CONFIG = load_config()
-INDEX_DIR = Path('tools/.semantic_index_v2')
+INDEX_DIR = Path('tools/.semantic_index')
+```
 
-# Module-level state for expensive objects
-_model = None
-_client = None
+### 4. Explicit Embedding Control
+- Keep manual SentenceTransformer for control over embeddings
+- Maintain consistent embedding generation
+- Store embeddings explicitly in ChromaDB
 
+### 5. Comprehensive Error Handling
+- Specific exceptions with file context
+- Graceful degradation for missing files
+- Clear user feedback with actionable messages
 
-def get_model():
-    """Lazy-load the sentence transformer model."""
-    global _model
-    if _model is None:
-        _model = SentenceTransformer('all-MiniLM-L6-v2')
-    return _model
+## Implementation Details
 
+### Core Functions
 
+```python
 def get_client():
     """Get or create ChromaDB client (lazy initialization)."""
     global _client
@@ -78,27 +127,20 @@ def get_client():
         _client = chromadb.PersistentClient(path=str(INDEX_DIR))
     return _client
 
-
 def get_collection():
     """Get or create the ChromaDB collection."""
     client = get_client()
     try:
-        collection = client.get_collection("gamma_vk_docs")
-        print(f"Loading existing index from {INDEX_DIR}")
-        return collection
-    except Exception:  # ChromaDB raises NotFoundError, but catch all exceptions
-        collection = client.create_collection(
+        return client.get_collection("gamma_vk_docs")
+    except ValueError:
+        return client.create_collection(
             "gamma_vk_docs",
             metadata={"hnsw:space": "cosine"}
         )
-        print(f"Creating new index at {INDEX_DIR}")
-        return collection
-
 
 def get_file_hash(filepath: Path) -> str:
     """Calculate MD5 hash of file for change detection."""
     return hashlib.md5(filepath.read_bytes()).hexdigest()
-
 
 def should_skip_file(filepath: Path) -> bool:
     """Check if file should be skipped based on exclusion rules."""
@@ -112,7 +154,6 @@ def should_skip_file(filepath: Path) -> bool:
         return True
     
     return False
-
 
 def chunk_text(text: str) -> List[str]:
     """Split text into overlapping chunks."""
@@ -133,7 +174,6 @@ def chunk_text(text: str) -> List[str]:
     
     return chunks
 
-
 def index_documents(directory: Path, extensions: List[str] = None):
     """Index all documents in directory with full metadata preservation."""
     extensions = extensions or CONFIG.get("default_extensions", ['.md', '.txt'])
@@ -142,8 +182,6 @@ def index_documents(directory: Path, extensions: List[str] = None):
     
     files_indexed = 0
     chunks_created = 0
-    
-    # Note: Could track existing IDs here for incremental updates in future
     
     for ext in extensions:
         for filepath in directory.rglob(f'*{ext}'):
@@ -200,8 +238,11 @@ def index_documents(directory: Path, extensions: List[str] = None):
                 print(f"Error indexing {filepath}: {e}")
     
     print(f"\nIndexing complete: {files_indexed} files, {chunks_created} chunks")
+```
 
+### Enhanced Search
 
+```python
 def search_documents(query: str, n_results: int = 5) -> List[SearchResult]:
     """Search for documents matching query with manual embedding generation."""
     collection = get_collection()
@@ -227,21 +268,10 @@ def search_documents(query: str, n_results: int = 5) -> List[SearchResult]:
         filepath, chunk_idx = doc_id.split('::')
         metadata = results['metadatas'][0][i]
         
-        # Truncate content for display while preserving structure
+        # Truncate content for display
         content = results['documents'][0][i]
-        if len(content) > 400:
-            # Try to truncate at a newline or space to avoid cutting mid-word
-            truncate_point = 400
-            # Look for newline within last 50 chars
-            last_newline = content.rfind('\n', 350, 400)
-            if last_newline > 0:
-                truncate_point = last_newline
-            else:
-                # Look for space within last 20 chars
-                last_space = content.rfind(' ', 380, 400)
-                if last_space > 0:
-                    truncate_point = last_space
-            content = content[:truncate_point] + '...'
+        if len(content) > 200:
+            content = content[:200] + '...'
         
         search_results.append(SearchResult(
             filepath=Path(filepath),
@@ -252,7 +282,6 @@ def search_documents(query: str, n_results: int = 5) -> List[SearchResult]:
         ))
     
     return search_results
-
 
 def show_stats() -> Stats:
     """Get comprehensive statistics about the index."""
@@ -278,60 +307,99 @@ def show_stats() -> Stats:
             total_chunks=0,
             index_location=INDEX_DIR
         )
+```
 
+### Clean CLI
 
-def display_results(results: List[SearchResult], query: str):
-    """Display search results in a formatted way."""
-    if results:
-        print(f"\nFound {len(results)} results for: '{query}'\n")
-        for i, result in enumerate(results, 1):
-            print(f"{i}. {result.filepath} (chunk {result.chunk_index}/{result.total_chunks}, score: {result.score:.3f})")
-            # Preserve line breaks by indenting each line
-            content_lines = result.content.split('\n')
-            for line in content_lines:
-                print(f"   {line}")
-            print()  # Empty line between results
-    else:
-        print(f"No results found for: '{query}'")
-
-
-def display_stats(stats: Stats):
-    """Display index statistics."""
-    print(f"\nIndex Statistics:")
-    print(f"  Location: {stats.index_location}")
-    print(f"  Total files: {stats.total_files}")
-    print(f"  Total chunks: {stats.total_chunks}")
-
-
+```python
 def main():
     parser = argparse.ArgumentParser(description='Semantic search for documentation')
-    subparsers = parser.add_subparsers(dest='command', required=True, help='Commands')
+    subparsers = parser.add_subparsers(dest='command', required=True)
     
     # Index command
-    index_parser = subparsers.add_parser('index', help='Index documentation files')
-    index_parser.add_argument('directory', nargs='?', default='.', type=Path, help='Directory to index')
-    index_parser.add_argument('--extensions', nargs='+', help='File extensions to index')
+    index_parser = subparsers.add_parser('index')
+    index_parser.add_argument('directory', type=Path, nargs='?', default='.')
+    index_parser.add_argument('--extensions', nargs='+')
     
     # Search command  
-    search_parser = subparsers.add_parser('search', help='Search indexed documents')
-    search_parser.add_argument('query', help='Search query')
-    search_parser.add_argument('-n', '--results', type=int, default=5, help='Number of results')
+    search_parser = subparsers.add_parser('search')
+    search_parser.add_argument('query')
+    search_parser.add_argument('-n', '--results', type=int, default=5)
     
     # Stats command
-    subparsers.add_parser('stats', help='Show index statistics')
+    subparsers.add_parser('stats')
     
     args = parser.parse_args()
     
     if args.command == 'index':
-        print(f"Indexing directory: {args.directory}")
         index_documents(args.directory, args.extensions)
     elif args.command == 'search':
         results = search_documents(args.query, args.results)
         display_results(results, args.query)
     elif args.command == 'stats':
-        stats = show_stats()
-        display_stats(stats)
+        display_stats(show_stats())
+```
 
+## Benefits of New Architecture
 
-if __name__ == '__main__':
-    main()
+1. **Readability**: Clear function names, obvious data flow
+2. **Maintainability**: Each function has single responsibility  
+3. **Testability**: Functions are easier to test than class methods
+4. **Performance**: Same performance with lazy initialization
+5. **Error Handling**: Clear error messages with file context
+6. **Pythonic**: Uses dataclasses, pathlib, and modern Python features
+7. **Feature Parity**: Maintains ALL existing functionality:
+   - Manual embedding control with SentenceTransformer
+   - File hash tracking for change detection
+   - Hidden file filtering
+   - Configuration file support
+   - Rich metadata preservation
+   - Comprehensive error context
+8. **Moderate Size**: ~150-170 lines (vs 238) - reasonable reduction while keeping features
+
+## Migration Strategy
+
+1. Create new `semantic_search_v2.py` alongside existing
+2. Test with same commands to ensure compatibility
+3. Replace original once verified
+4. No changes needed to existing index or usage patterns
+
+## Future Enhancements (Not in Initial Refactor)
+
+- Async file reading for better performance
+- Progress bars for large directories  
+- Incremental indexing (only changed files)
+- Better chunk boundary detection (sentence-aware)
+- Export/import index capability
+
+## Key Changes Summary
+
+### What's Preserved (No Loss of Functionality)
+- ✅ Manual SentenceTransformer embedding generation
+- ✅ File hash tracking for change detection  
+- ✅ Hidden file/directory filtering
+- ✅ External configuration file support
+- ✅ Rich metadata (filename, extension, hash, timestamp)
+- ✅ Chunk overlapping with configurable ratio
+- ✅ Specific error messages with file context
+- ✅ Same CLI interface and commands
+- ✅ Same ChromaDB persistence location
+
+### What's Improved
+- ✨ Cleaner functional architecture with lazy initialization
+- ✨ Type-safe data structures using dataclasses
+- ✨ Better separation of concerns
+- ✨ More testable code structure
+- ✨ Clearer error handling without bare except
+- ✨ Configuration with proper defaults
+- ✨ More concise implementation (~30% reduction)
+
+### What's Different (But Better)
+- 🔄 Functions instead of class (but with module-level state for expensive objects)
+- 🔄 Explicit configuration loading at module level
+- 🔄 Batch processing of chunks per file for efficiency
+- 🔄 Better empty result handling
+
+## Summary
+
+This refactor maintains complete feature parity while improving code quality. The hybrid functional approach (functions with minimal module-level state) provides the best of both worlds: clean API and efficient resource usage. By preserving all existing functionality while removing unnecessary complexity, we create a tool that's more maintainable without sacrificing any capabilities.

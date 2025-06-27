@@ -1,2 +1,3 @@
 /target
 /tools/.semantic_index/**/*
+/tools/.semantic_index_v2/**/*

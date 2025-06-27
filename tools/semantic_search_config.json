@@ -9,6 +9,10 @@
     "dist",
     ".venv",
     "env",
-    "venv"
+    "venv",
+    ".claude",
+    ".vscode",
+    ".idea",
+    ".pytest_cache"
   ]
 }
