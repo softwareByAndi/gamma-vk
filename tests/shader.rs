@@ -4,7 +4,6 @@
 //! and resource management behaviors.
 
 use gamma_vk::{GammaVkError, ShaderModule, VulkanContext};
-use std::sync::Arc;
 
 // Test helper functions
 mod helpers {
