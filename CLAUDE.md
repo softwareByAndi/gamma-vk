@@ -14,6 +14,30 @@ Gamma-VK is a safe, performant Vulkan graphics engine built in Rust. The project
 
 always feel free to check appropriate documentation if you are unsure about how to implement a command or feature
 
+### Searching Local Documentation
+
+```bash
+# Index all documentation (first time or after major changes)
+python semantic_search.py index .
+
+# Index specific directories
+python semantic_search.py index docs/
+
+# Index only specific file types
+python semantic_search.py index . --extensions .md .txt
+
+# Search for concepts semantically
+python semantic_search.py search "how to handle buffer allocation"
+python semantic_search.py search "error handling patterns"
+python semantic_search.py search "vulkan initialization steps"
+
+# Get more results
+python semantic_search.py search "memory management" -n 10
+
+# Check index statistics
+python semantic_search.py stats
+```
+
 ### Building and Running
 ```bash
 # Build the project

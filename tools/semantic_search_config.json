@@ -1,0 +1,14 @@
+{
+  "excluded_dirs": [
+    "target",
+    "node_modules",
+    ".git",
+    "__pycache__",
+    ".semantic_index",
+    "build",
+    "dist",
+    ".venv",
+    "env",
+    "venv"
+  ]
+}

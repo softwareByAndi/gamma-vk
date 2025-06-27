@@ -25,6 +25,9 @@ class DocumentIndexer:
         self.persist_directory = persist_directory
         self.model = SentenceTransformer('all-MiniLM-L6-v2')
         
+        # Load configuration
+        self.excluded_dirs = self._load_config()
+        
         # Initialize ChromaDB with persistence
         self.client = chromadb.PersistentClient(path=persist_directory)
         
@@ -38,6 +41,18 @@ class DocumentIndexer:
                 metadata={"hnsw:space": "cosine"}
             )
             print(f"Creating new index at {persist_directory}")
+    
+    def _load_config(self) -> List[str]:
+        """Load excluded directories from configuration file."""
+        config_path = Path(__file__).parent / "semantic_search_config.json"
+        default_excluded = ["target", "node_modules", ".git", "__pycache__", ".semantic_index"]
+        
+        try:
+            with open(config_path, 'r') as f:
+                config = json.load(f)
+                return config.get("excluded_dirs", default_excluded)
+        except:
+            return default_excluded
     
     def _get_file_hash(self, filepath: str) -> str:
         """Get hash of file content for change detection."""
@@ -77,6 +92,10 @@ class DocumentIndexer:
             for filepath in path.rglob(f'*{ext}'):
                 # Skip hidden files and directories
                 if any(part.startswith('.') for part in filepath.parts):
+                    continue
+                
+                # Skip files in excluded directories
+                if any(excluded_dir in filepath.parts for excluded_dir in self.excluded_dirs):
                     continue
                 
                 try:
