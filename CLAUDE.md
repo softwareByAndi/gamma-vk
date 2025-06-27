@@ -189,14 +189,16 @@ The project is organized into planned iterations:
 2. **Basic Rendering** - Triangle rendering with shader system and pipelines  
 3. **Resource Management** - Texture system and advanced memory management
 
-### Daily Workflow
-1. **Session Start**: Run `workflows/session_start.workflow` for comprehensive session initialization
-2. Check [TODO.md](TODO.md) for current iteration tasks (part of session start workflow)
+### Daily Session Notes
 3. Update task status as work progresses  
 4. Run quality checks before committing (`cargo test`, `cargo clippy`, `cargo fmt`)
 5. Update documentation for new features
 6. Follow iterative development principles from [docs/ITERATIVE_DEVELOPMENT.md](docs/ITERATIVE_DEVELOPMENT.md)
 7. **Session End**: Document insights and decisions in session_logs/{i}_{task_name}.log.md
+
+### Session Logging
+Session insights and architectural decisions are documented in:
+- **session_logs/{i}_{task_name}.log.md** - Numbered session logs capturing key decisions, analysis, and next steps
 
 ### Quality Standards
 - All public APIs must have rustdoc documentation
@@ -270,41 +272,6 @@ When adding new functionality:
 5. **Consider cross-platform compatibility** and feature detection
 
 The project architecture is designed to support incremental development and extension without requiring major architectural changes.
-
-## AI Workflow Management System
-
-The project includes a structured workflow system to ensure consistent, high-quality development sessions with staff engineer-level analysis.
-
-### Workflow Files
-- **[workflows/session_start.workflow](workflows/session_start.workflow)** - Comprehensive session initialization procedure
-- **[workflows/iteration_review.workflow](workflows/iteration_review.workflow)** - Mid-iteration health checks and risk assessment
-- **[workflows/task_planning.workflow](workflows/task_planning.workflow)** - Complex task breakdown and planning methodology
-- **[workflows/quality_gate.workflow](workflows/quality_gate.workflow)** - Pre-commit quality validation checklist
-
-### Session Logging
-Session insights and architectural decisions are documented in:
-- **session_logs/{i}_{task_name}.log.md** - Numbered session logs capturing key decisions, analysis, and next steps
-
-### Usage Examples
-```bash
-# Start a development session (recommended)
-# Follow procedures in workflows/session_start.workflow
-
-# Mid-iteration health check
-# Follow procedures in workflows/iteration_review.workflow
-
-# Planning complex tasks
-# Follow procedures in workflows/task_planning.workflow
-
-# Pre-commit validation
-# Follow procedures in workflows/quality_gate.workflow
-```
-
-### Benefits
-- **Consistency**: Standardized procedures across all development sessions
-- **Knowledge Retention**: Session logs preserve architectural decisions and insights
-- **Quality Assurance**: Systematic checks prevent oversights and regressions
-- **Staff Engineer Perspective**: Built-in critical analysis and long-term thinking
 
 ## Key Documentation
 

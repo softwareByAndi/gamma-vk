@@ -371,7 +371,7 @@ fn window_minimizing_pauses_rendering() { }
 
 Effective TDD in Gamma-VK requires:
 1. **Think First**: What behavior are you specifying?
-2. **Test at the Right Level**: Unit for algorithms, integration for workflows
+2. **Test at the Right Level**: Unit Tests for algorithms, integration tests for interactions
 3. **Embrace Failure**: Red tests guide implementation
 4. **Refactor Ruthlessly**: Let tests drive better design
 5. **Know When to Stop**: Don't test what isn't ready
