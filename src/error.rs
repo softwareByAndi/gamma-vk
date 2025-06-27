@@ -81,5 +81,4 @@ mod tests {
         assert!(error_string.contains("Initialization failed"));
         assert!(error_string.contains("display test"));
     }
-
 }

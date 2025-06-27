@@ -4,8 +4,8 @@
 //! Tests should fail when expected functionality is missing.
 
 use gamma_vk::{
-    buffer::{Buffer, IndexBuffer, UniformBuffer, VertexBuffer},
     GammaVkError, VulkanContext,
+    buffer::{Buffer, IndexBuffer, UniformBuffer, VertexBuffer},
 };
 use std::sync::Arc;
 use vulkano::{
@@ -24,7 +24,9 @@ fn create_test_context() -> Option<(VulkanContext, Arc<StandardMemoryAllocator>)
         Err(e) => panic!("Unexpected error creating VulkanContext: {}", e),
     };
 
-    let allocator = Arc::new(StandardMemoryAllocator::new_default(context.device().clone()));
+    let allocator = Arc::new(StandardMemoryAllocator::new_default(
+        context.device().clone(),
+    ));
     Some((context, allocator))
 }
 
@@ -48,36 +50,32 @@ fn test_buffer_creation_with_valid_size() {
     assert_eq!(buffer.size(), 1024);
 }
 
-
 #[test]
 fn test_buffer_creation_with_zero_size_returns_error() {
     let Some((context, allocator)) = create_test_context() else {
         return;
     };
 
-    // Clone the references we need for the closure
-    let device = context.device();
-    let allocator_clone = allocator.clone();
+    // Attempt to create a zero-size buffer
+    let result = Buffer::new_host_visible(&context.device(), &allocator, 0, BufferUsage::TRANSFER_DST);
 
-    // Catch the panic from Vulkano
-    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        Buffer::new_host_visible(
-            &device,
-            &allocator_clone,
-            0,
-            BufferUsage::TRANSFER_DST,
-        )
-    }));
-
-    // This test documents that zero-size buffers should fail
-    // Current Vulkano implementation panics, which is not ideal
+    // Should return an error as per Vulkan spec VUID-VkBufferCreateInfo-size-00912
     assert!(
         result.is_err(),
-        "Zero-size buffer creation should fail (currently panics in Vulkano)"
+        "Zero-size buffer creation should return an error"
     );
-    
-    // TODO: The buffer module should validate size before calling Vulkano
-    // to provide a better error message instead of a panic
+
+    // Verify the error message is appropriate
+    match result {
+        Err(gamma_vk::GammaVkError::BufferCreation { message }) => {
+            assert!(
+                message.contains("size must be greater than 0"),
+                "Error message should explain size requirement, got: {}",
+                message
+            );
+        }
+        _ => panic!("Expected BufferCreation error"),
+    }
 }
 
 #[test]
@@ -153,9 +151,15 @@ fn test_write_data_larger_than_buffer_fails() {
     let data = vec![42u8; 2048]; // Larger than buffer
     let result = buffer.write_data(&data);
 
-    assert!(result.is_err(), "Should fail when writing data larger than buffer");
     assert!(
-        result.unwrap_err().to_string().contains("exceeds buffer size"),
+        result.is_err(),
+        "Should fail when writing data larger than buffer"
+    );
+    assert!(
+        result
+            .unwrap_err()
+            .to_string()
+            .contains("exceeds buffer size"),
         "Error message should explain size mismatch"
     );
 }
@@ -177,7 +181,10 @@ fn test_partial_buffer_write() {
     let data = vec![42u8; 512]; // Half the buffer size
     let result = buffer.write_data(&data);
 
-    assert!(result.is_ok(), "Should succeed when writing partial buffer data");
+    assert!(
+        result.is_ok(),
+        "Should succeed when writing partial buffer data"
+    );
 }
 
 #[test]
@@ -327,7 +334,11 @@ fn test_vertex_buffer_size_accessible() {
     let vertex_buffer = VertexBuffer::new_host_visible(&context.device(), &allocator, size)
         .expect("Failed to create vertex buffer");
 
-    assert_eq!(vertex_buffer.size(), size, "Size should match requested value");
+    assert_eq!(
+        vertex_buffer.size(),
+        size,
+        "Size should match requested value"
+    );
 }
 
 #[test]
@@ -340,7 +351,11 @@ fn test_index_buffer_size_accessible() {
     let index_buffer = IndexBuffer::new_host_visible(&context.device(), &allocator, size)
         .expect("Failed to create index buffer");
 
-    assert_eq!(index_buffer.size(), size, "Size should match requested value");
+    assert_eq!(
+        index_buffer.size(),
+        size,
+        "Size should match requested value"
+    );
 }
 
 #[test]
@@ -357,6 +372,30 @@ fn test_uniform_buffer_size_accessible() {
         uniform_buffer.size(),
         size,
         "Size should match requested value"
+    );
+}
+
+#[test]
+fn test_buffer_size_is_accessible() {
+    let Some((context, allocator)) = create_test_context() else {
+        return;
+    };
+
+    let requested_size = 4096u64;
+    let buffer = Buffer::new_host_visible(
+        &context.device(),
+        &allocator,
+        requested_size,
+        BufferUsage::TRANSFER_DST,
+    )
+    .expect("Failed to create buffer");
+
+    // Size getter should return at least the requested size
+    assert!(
+        buffer.size() >= requested_size,
+        "Buffer size {} should be at least the requested size {}",
+        buffer.size(),
+        requested_size
     );
 }
 
@@ -380,7 +419,10 @@ fn test_staging_buffer_upload_placeholder_returns_error() {
     let result = buffer.upload_via_staging(&context.device(), &allocator, &data);
 
     // Current implementation should return "not implemented" error
-    assert!(result.is_err(), "Staging upload should fail in current implementation");
+    assert!(
+        result.is_err(),
+        "Staging upload should fail in current implementation"
+    );
     assert!(
         result
             .unwrap_err()
@@ -398,7 +440,9 @@ fn test_buffer_move_semantics() {
         return;
     };
 
-    // FIXME - research if this test is implemented correctly
+    // This test verifies that Buffer implements move semantics correctly.
+    // Rust enforces move semantics at compile time, so this test primarily
+    // documents the expected behavior rather than testing runtime behavior.
 
     let buffer1 = Buffer::new_host_visible(
         &context.device(),
@@ -473,11 +517,7 @@ fn test_buffer_creation_with_odd_size() {
             BufferUsage::TRANSFER_DST,
         );
 
-        assert!(
-            buffer.is_ok(),
-            "Should handle odd size {} correctly",
-            size
-        );
+        assert!(buffer.is_ok(), "Should handle odd size {} correctly", size);
 
         let buffer = buffer.unwrap();
         assert!(

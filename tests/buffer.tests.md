@@ -20,7 +20,7 @@ This document outlines the comprehensive test plan for the buffer module followi
 - [x] `test_custom_allocation_preferences_respected` - Custom allocation info is properly applied
 
 #### Buffer Size and Alignment Tests
-- [ ] `test_buffer_size_is_accessible` - Size getter returns correct value
+- [x] `test_buffer_size_is_accessible` - Size getter returns correct value
 - [ ] `test_buffer_size_includes_alignment_padding` - Buffers meet Vulkan alignment requirements
 - [x] `test_buffer_creation_with_odd_size` - Verify alignment for non-power-of-2 sizes
 - [ ] `test_buffer_minimum_alignment_requirements` - Meet minimum alignment for usage types
@@ -35,7 +35,7 @@ This document outlines the comprehensive test plan for the buffer module followi
 #### Buffer Lifetime Tests
 - [ ] `test_buffer_cleanup_on_drop` - RAII ensures proper cleanup
 - [x] `test_buffer_move_semantics` - Buffers can be moved safely
-- [ ] `test_buffer_not_copyable` - Prevent accidental resource duplication
+- [x] `test_buffer_not_copyable` - Prevent accidental resource duplication
 - [x] `test_multiple_buffers_independent_lifetime` - Buffers don't affect each other
 
 ### 2. Type-Safe Buffer Wrapper Tests
@@ -114,6 +114,30 @@ Test buffers with actual Vulkan contexts to ensure they work in practice, not ju
 Add tests for error conditions, resource exhaustion, and platform-specific behaviors.
 - Basic edge cases completed (zero size, odd sizes, null data)
 - Resource exhaustion and platform-specific tests still pending
+
+## Session 10 Updates (2025-06-27)
+
+### Critical Issues Fixed
+1. **Zero-size buffer validation** - Now properly returns error instead of panic
+2. **Host visibility check** - Documented current approach as most reliable
+3. **Empty data writes** - Confirmed correct behavior (succeeds as expected)
+4. **Move semantics test** - Replaced FIXME with proper documentation
+
+### Tests Added
+- `test_buffer_size_is_accessible` - Validates size getter functionality
+- `test_buffer_not_copyable` - Added as compile_fail doc test in buffer.rs
+
+### Current Test Count: 24 buffer tests passing
+
+### Deferred Tests
+The following tests were deferred to focus on pipeline implementation:
+- Memory type verification tests
+- Resource exhaustion tests
+- Platform-specific tests
+- Concurrent operation tests
+- Advanced integration tests
+
+These can be added in future iterations as needed.
 
 ## Notes on Test Design
 

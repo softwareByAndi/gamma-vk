@@ -1,5 +1,4 @@
-
-use gamma_vk::{GammaVkError, VulkanContext, ShaderModule};
+use gamma_vk::{GammaVkError, ShaderModule, VulkanContext};
 
 #[test]
 fn test_shader_module_creation_from_minimal_spirv() {
@@ -94,8 +93,7 @@ fn test_shader_module_creation_from_too_short_spirv() {
         GammaVkError::ShaderCompilation { message } => {
             // Could be either "multiple of 4" or "missing magic number"
             assert!(
-                message.contains("multiple of 4 bytes")
-                    || message.contains("missing magic number"),
+                message.contains("multiple of 4 bytes") || message.contains("missing magic number"),
                 "Expected error about alignment or magic number, got: {}",
                 message
             );
