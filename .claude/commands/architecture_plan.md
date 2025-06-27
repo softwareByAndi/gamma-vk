@@ -1,5 +1,14 @@
 You are creating a TDD-oriented architecture plan for {$ARGUMENTS} in Gamma-VK, a Vulkan graphics engine in Rust. Think like a senior engineer who prioritizes testable behavior over implementation details.
 
+## Step 0: Context Gathering (5 minutes)
+Before planning, gather relevant context:
+- [ ] Search for similar patterns: `python tools/semantic_search.py search "{feature type} implementation"`
+- [ ] Check for existing abstractions: `python tools/semantic_search.py search "trait for {behavior}"`
+- [ ] Review error handling patterns: `python tools/semantic_search.py search "error handling {domain}"`
+- [ ] Check `debug/` folder for relevant API gotchas and lessons learned
+- [ ] Review `docs/` for architectural patterns and principles
+- [ ] Look at existing implementations in `src/` for established patterns
+
 ## Your Plan Should Address:
 
 ### 1. **Behavior Specification Through Tests**
@@ -31,20 +40,27 @@ For each phase, provide checkboxes in this order:
 4. [ ] Document public API
 5. [ ] Add integration test if needed
 
+### 5. **Cross-Cutting Concerns**
+Analyze how this feature handles:
+- **Thread Safety**: How will this work across threads?
+- **Error Propagation**: How do errors bubble up to users?
+- **Performance Impact**: What are the hot paths and bottlenecks?
+- **Memory Management**: What owns what? How is cleanup handled?
+
 ## Context to Consider:
 
-1. **Check existing patterns**:
-   - use `python tools/semantic_search.py` to find semantically related features
-   - Similar features in the codebase
-   - Relevant debug notes in `debug/`
-   - Architectural guidelines in `docs/`
+1. **Reference existing patterns**:
+   - Test patterns: See `docs/TESTING_PATTERNS.md` for test naming and structure
+   - RAII examples: Check `docs/RAII_PATTERN.md` and existing implementations in `src/`
+   - Architecture workflow: Follow `docs/TDD_ARCHITECTURE_WORKFLOW.md`
+   - Code style: Refer to `docs/STYLE_GUIDE.md` for conventions
 
 2. **Vulkan/Graphics specifics**:
-   - Resource lifecycle (RAII patterns)
+   - Resource lifecycle (RAII patterns - see `src/buffer.rs` for examples)
    - Thread safety requirements
-   - Platform differences (especially MoltenVK)
+   - Platform differences (especially MoltenVK - check `src/context.rs`)
 
-3. **Project principles**:
+3. **Project principles** (from `docs/DESIGN_PRINCIPLES.md`):
    - Safety by Default
    - Performance by Design
    - Extensible by Nature
@@ -86,6 +102,7 @@ impl {Type} {
 ## Implementation Checklist
 
 ### Phase 1: Foundation (Priority: High)
+**Goal**: Minimal viable functionality that proves the concept
 
 #### 1.1 Core Types
 - [ ] Write test for basic type creation
@@ -101,7 +118,15 @@ impl {Type} {
 - [ ] Verify RAII cleanup
 - [ ] Add debug/display traits
 
+#### Phase Gate Validation
+Before moving to Phase 2, verify:
+- [ ] All Phase 1 tests pass
+- [ ] No regression in existing tests
+- [ ] API feels ergonomic (can you explain it simply?)
+- [ ] Error paths are tested and documented
+
 ### Phase 2: Integration (Priority: Medium)
+**Goal**: Feature works with existing system components
 
 #### 2.1 System Integration
 - [ ] Write integration test with {existing_module}
@@ -110,7 +135,15 @@ impl {Type} {
 - [ ] Verify thread safety
 - [ ] Document integration patterns
 
+#### Phase Gate Validation
+Before moving to Phase 3, verify:
+- [ ] Integration tests pass
+- [ ] No performance regression
+- [ ] Thread safety verified
+- [ ] API documentation complete
+
 ### Phase 3: Performance (Priority: Low)
+**Goal**: Optimize for production use
 
 #### 3.1 Optimizations
 - [ ] Write performance benchmarks
@@ -120,25 +153,49 @@ impl {Type} {
 
 ## Technical Considerations
 
-### Dependencies
-- Depends on: {existing modules}
-- Used by: {future modules}
+### Integration Analysis
+1. **Direct Dependencies**:
+   - Uses: {modules this directly depends on}
+   - Used By: {modules that will depend on this}
+   
+2. **Indirect Interactions**:
+   - Shared Resources: {what resources are accessed}
+   - Event Flow: {what events does this emit/consume}
+   - State Changes: {what global state is affected}
 
 ### Platform Notes
 - macOS/MoltenVK: {specific considerations}
 - Cross-platform: {what to verify}
 
+### Architecture Decision Records
+1. **Key Decision**: {what approach was chosen}
+   - **Alternatives Considered**: {other options evaluated}
+   - **Rationale**: {why this approach}
+   - **Trade-offs**: {what we're giving up}
+
 ### Risk Assessment
 - **Main Risk**: {what could go wrong}
 - **Mitigation**: {how to handle it}
+- **Early Warning Signs**: {how to detect problems}
 
 ## Definition of Done
-- [ ] All tests pass
+- [ ] All tests pass (unit and integration)
 - [ ] Public API documented with examples
 - [ ] Error conditions return appropriate GammaVkError variants
-- [ ] Resources cleaned up automatically (RAII)
+- [ ] Resources cleaned up automatically (RAII verified)
 - [ ] No clippy warnings
 - [ ] Benchmarks show acceptable performance
+- [ ] Architecture decisions documented in session_logs/
+- [ ] Any discovered gotchas added to debug/ folder
 ```
+
+## Pre-Planning Validation Checklist
+Before submitting this plan:
+- [ ] Context gathering completed (Step 0)
+- [ ] All phases have clear goals and validation gates
+- [ ] Cross-cutting concerns addressed
+- [ ] Integration points identified
+- [ ] Architecture decisions documented
+- [ ] Plan follows TDD principles from docs/
 
 Remember: Write the test first. The test defines the specification. Implementation follows to make the test pass.
